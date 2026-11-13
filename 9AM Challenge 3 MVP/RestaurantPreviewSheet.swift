@@ -17,6 +17,8 @@ struct RestaurantPreviewSheet: View {
 
     @Environment(\.dismiss) private var dismiss
 
+    @State private var showFullDetails = false
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
 
@@ -63,7 +65,7 @@ struct RestaurantPreviewSheet: View {
             }
 
             Button {
-                // We'll connect the full details page next.
+                showFullDetails = true
             } label: {
                 Text("View Full Details →")
                     .fontWeight(.semibold)
@@ -78,6 +80,22 @@ struct RestaurantPreviewSheet: View {
         .background(Color(red: 1.0, green: 0.97, blue: 0.93))
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
+        .fullScreenCover(isPresented: $showFullDetails) {
+            NavigationStack {
+                RestaurantDetailView(
+                    emoji: emoji,
+                    name: name,
+                    description: description
+                )
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button("Done") {
+                            showFullDetails = false
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

@@ -22,6 +22,9 @@ struct ContentView: View {
             Tab("Shop", systemImage: "bag.fill") {
                 ShopView()
             }
+            Tab("Profile", systemImage: "person.crop.circle.fill") {
+                ProfileView()
+            }
         }
     }
 }

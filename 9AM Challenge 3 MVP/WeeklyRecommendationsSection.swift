@@ -33,12 +33,22 @@ struct WeeklyRecommendationsSection: View {
                 }
             }
 
+            
             ForEach(restaurants, id: \.1) { restaurant in
-                RestaurantCard(
-                    emoji: restaurant.0,
-                    name: restaurant.1,
-                    description: restaurant.2
-                )
+                NavigationLink {
+                    RestaurantDetailView(
+                        emoji: restaurant.0,
+                        name: restaurant.1,
+                        description: restaurant.2
+                    )
+                } label: {
+                    RestaurantCard(
+                        emoji: restaurant.0,
+                        name: restaurant.1,
+                        description: restaurant.2
+                    )
+                }
+                .buttonStyle(.plain)
             }
         }
     }
