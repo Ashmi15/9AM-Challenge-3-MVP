@@ -1,0 +1,45 @@
+//
+//  RestaurantCard.swift
+//  9AM Challenge 3 MVP
+//
+//  Created by Ashmi Sharma on 13/11/26.
+//
+
+import SwiftUI
+
+struct RestaurantCard: View {
+    let emoji: String
+    let name: String
+    let description: String
+
+    var body: some View {
+        HStack(spacing: 15) {
+            Text(emoji)
+                .font(.system(size: 42))
+                .frame(width: 70, height: 30)
+                .background(Color.blue.opacity(0.12))
+                .clipShape(RoundedRectangle(cornerRadius: 15))
+
+            VStack(alignment: .leading, spacing: 5) {
+                Text(name)
+                    .font(.headline)
+
+                Text(description)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+
+            Spacer()
+
+            Image(systemName: "chevron.right")
+                .foregroundStyle(.blue)
+        }
+        .padding(12)
+        .background(.white)
+        .clipShape(RoundedRectangle(cornerRadius: 18))
+    }
+}
+
+#Preview {
+    RestaurantCard(emoji: "emoji", name: "name", description: "desc")
+}

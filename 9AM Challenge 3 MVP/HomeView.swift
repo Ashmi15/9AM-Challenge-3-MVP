@@ -48,18 +48,13 @@ struct HomeView: View {
                             }
                             .padding(20)
                             .frame(width: 375, height: 205)
-                            .background(Color(red: 1.0, green: 0.87, blue: 0.75))
+                            .background(Color(red: 0.95, green: 0.75, blue: 0.73))
                             .clipShape(RoundedRectangle(cornerRadius: 20))
                             
                             VStack(alignment: .leading, spacing: 5) {
                                 VStack {
                                     Text("Goals Left For This Month")
                                         .font(.headline)
-                                    
-                                    Text("November")
-                                        .font(.subheadline)
-                                        .foregroundStyle(.gray)
-                                        .bold()
                                     
                                     GoalProgressRow(
                                         title: "Try 3 new restaurants",
@@ -72,19 +67,18 @@ struct HomeView: View {
                                         progress: 1,
                                         total: 2
                                     )
-                                    
-                                    GoalProgressRow(
-                                        title: "Review 5 restaurants",
-                                        progress: 3,
-                                        total: 5
-                                    )
                                 }
+                                .padding(20)
+                                .background(Color(red: 0.65, green: 0.89, blue: 0.75))
+                                .clipShape(RoundedRectangle(cornerRadius: 20))
+                                .frame(width: 375, height: 140)
+                            }
+                            
+                              WeeklyRecommendationsSection()
                                     .padding(20)
-                                    .background(Color(red: 0.65, green: 0.89, blue: 0.75))
+                                    .background(Color(red: 0.35, green: 0.79, blue: 0.75))
                                     .clipShape(RoundedRectangle(cornerRadius: 20))
-                                    .frame(width: 375, height: 205)
-                                    
-                                    
+                                    .frame(width: 375, height: 305)
                                     
                             }
                         }
@@ -97,7 +91,7 @@ struct HomeView: View {
             }
         }
     }
-}
+
 
 #Preview {
     HomeView()

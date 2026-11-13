@@ -15,7 +15,7 @@ struct WeeklyRecommendationsSection: View {
     ]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 15) {
+        VStack(alignment: .leading, spacing: 5) {
             HStack {
                 Text("This Week's Top Recs 🍴")
                     .font(.headline)
@@ -26,7 +26,7 @@ struct WeeklyRecommendationsSection: View {
                     // We'll connect this later.
                 }
                 .font(.subheadline)
-                .foregroundStyle(.orange)
+                .foregroundStyle(.blue)
             }
 
             ForEach(restaurants, id: \.1) { restaurant in
@@ -40,6 +40,4 @@ struct WeeklyRecommendationsSection: View {
     }
 }
 
-#Preview {
-    WeeklyRecommendationsSection()
-}
+
