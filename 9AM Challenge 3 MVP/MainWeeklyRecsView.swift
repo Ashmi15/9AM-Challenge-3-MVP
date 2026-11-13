@@ -6,21 +6,49 @@
 //
 
 
+
 import SwiftUI
 
 struct WeeklyRecsView: View {
 
-    let restaurants = [
-        ("🍜", "Mala Hotpot", "Spicy • Chinatown"),
-        ("🍣", "Sushi Corner", "Japanese • Orchard"),
-        ("🍛", "Curry House", "Indian • Little India"),
-        ("🍕", "Pizza Paradise", "Italian • Bugis"),
-        ("🥟", "Dumpling House", "Chinese • Tampines")
+    @State private var selectedRestaurant: RestaurantPreview?
+
+    let restaurants: [RestaurantPreview] = [
+        RestaurantPreview(
+            emoji: "🍜",
+            name: "Mala Hotpot",
+            description: "Spicy • Chinatown",
+            reason: "You love bold, spicy flavours! This is right up your alley!"
+        ),
+        RestaurantPreview(
+            emoji: "🍣",
+            name: "Sushi Corner",
+            description: "Japanese • Orchard",
+            reason: "You enjoy savoury flavours, and Japanese food could be a great match!"
+        ),
+        RestaurantPreview(
+            emoji: "🍛",
+            name: "Curry House",
+            description: "Indian • Little India",
+            reason: "You've shown an interest in aromatic, spicy dishes!"
+        ),
+        RestaurantPreview(
+            emoji: "🍕",
+            name: "Pizza Paradise",
+            description: "Italian • Bugis",
+            reason: "Sometimes comforting, cheesy food is exactly what you need!"
+        ),
+        RestaurantPreview(
+            emoji: "🥟",
+            name: "Dumpling House",
+            description: "Chinese • Tampines",
+            reason: "These savoury dumplings match your love of comforting food!"
+        )
     ]
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 8) {
 
                 Text("Weekly Recommendations")
                     .font(.largeTitle)
@@ -30,12 +58,17 @@ struct WeeklyRecsView: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
 
-                ForEach(restaurants, id: \.1) { restaurant in
-                    RestaurantCard(
-                        emoji: restaurant.0,
-                        name: restaurant.1,
-                        description: restaurant.2
-                    )
+                ForEach(restaurants) { restaurant in
+                    Button {
+                        selectedRestaurant = restaurant
+                    } label: {
+                        RestaurantCard(
+                            emoji: restaurant.emoji,
+                            name: restaurant.name,
+                            description: restaurant.description
+                        )
+                    }
+                    .buttonStyle(.plain)
                 }
             }
             .padding(20)
@@ -43,7 +76,26 @@ struct WeeklyRecsView: View {
         .background(
             Color(red: 1.0, green: 0.97, blue: 0.93)
         )
+
+        // Opens the half-sheet
+        .sheet(item: $selectedRestaurant) { restaurant in
+            RestaurantPreviewSheet(
+                emoji: restaurant.emoji,
+                name: restaurant.name,
+                description: restaurant.description,
+                reason: restaurant.reason
+            )
+        }
     }
+}
+
+// Restaurant data model
+struct RestaurantPreview: Identifiable {
+    let id = UUID()
+    let emoji: String
+    let name: String
+    let description: String
+    let reason: String
 }
 
 #Preview {

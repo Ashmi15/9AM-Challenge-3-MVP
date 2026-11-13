@@ -17,7 +17,7 @@ struct WeeklyRecommendationsSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
             HStack {
-                Text("This Week's Top Recs 🍴")
+                Text("Top Weekly Recommendations")
                     .font(.headline)
 
                 Spacer()
