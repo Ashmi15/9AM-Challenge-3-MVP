@@ -50,14 +50,54 @@ struct HomeView: View {
                             .frame(width: 375, height: 205)
                             .background(Color(red: 1.0, green: 0.87, blue: 0.75))
                             .clipShape(RoundedRectangle(cornerRadius: 20))
+                            
+                            VStack(alignment: .leading, spacing: 5) {
+                                VStack {
+                                    Text("Goals Left For This Month")
+                                        .font(.headline)
+                                    
+                                    Text("November")
+                                        .font(.subheadline)
+                                        .foregroundStyle(.gray)
+                                        .bold()
+                                    
+                                    GoalProgressRow(
+                                        title: "Try 3 new restaurants",
+                                        progress: 2,
+                                        total: 3
+                                    )
+                                    
+                                    GoalProgressRow(
+                                        title: "Explore 2 new cuisines",
+                                        progress: 1,
+                                        total: 2
+                                    )
+                                    
+                                    GoalProgressRow(
+                                        title: "Review 5 restaurants",
+                                        progress: 3,
+                                        total: 5
+                                    )
                                 }
+                                    .padding(20)
+                                    .background(Color(red: 0.65, green: 0.89, blue: 0.75))
+                                    .clipShape(RoundedRectangle(cornerRadius: 20))
+                                    .frame(width: 375, height: 205)
+                                    
+                                    
+                                    
                             }
                         }
+                        
                     }
+                    
+                    
+                    
                 }
-                
             }
         }
+    }
+}
 
 #Preview {
     HomeView()
