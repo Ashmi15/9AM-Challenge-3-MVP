@@ -20,9 +20,9 @@ struct WeeklyRecsView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: 10) {
 
-                Text("This Week's Top Recs! 🍴")
+                Text("Weekly Recommendations")
                     .font(.largeTitle)
                     .fontWeight(.bold)
 
@@ -43,8 +43,6 @@ struct WeeklyRecsView: View {
         .background(
             Color(red: 1.0, green: 0.97, blue: 0.93)
         )
-        .navigationTitle("Weekly Recs")
-        .navigationBarTitleDisplayMode(.inline)
     }
 }
 

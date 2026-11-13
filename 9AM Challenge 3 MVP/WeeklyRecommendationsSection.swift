@@ -22,11 +22,15 @@ struct WeeklyRecommendationsSection: View {
 
                 Spacer()
 
-                Button("View All") {
-                    // We'll connect this later.
+                NavigationLink(destination: WeeklyRecsView()) {
+                    HStack(spacing: 4) {
+                        Text("View All")
+
+                        Image(systemName: "arrow.right")
+                    }
+                    .font(.subheadline)
+                    .foregroundStyle(.blue)
                 }
-                .font(.subheadline)
-                .foregroundStyle(.blue)
             }
 
             ForEach(restaurants, id: \.1) { restaurant in
