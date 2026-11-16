@@ -103,11 +103,18 @@ struct RestaurantDetailView: View {
                         .font(.title2)
                         .fontWeight(.bold)
 
-                    Toggle(
-                        "I've eaten here!",
-                        isOn: $hasVisited
-                    )
-                    .tint(.orange)
+                    Button {
+                        hasVisited.toggle()
+                    } label: {
+                        HStack(spacing: 10) {
+                            Image(systemName: hasVisited ? "checkmark.square.fill" : "square")
+                                .font(.title2)
+                                .foregroundStyle(hasVisited ? .orange : .secondary)
+                            Text("I've eaten here!")
+                                .foregroundStyle(.primary)
+                        }
+                    }
+                    .buttonStyle(.plain)
                 }
 
                 // Only show feedback if visited
