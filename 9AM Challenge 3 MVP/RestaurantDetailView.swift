@@ -104,7 +104,11 @@ struct RestaurantDetailView: View {
                         .fontWeight(.bold)
 
                     Button {
+                        let wasVisited = hasVisited
                         hasVisited.toggle()
+                        if hasVisited && !wasVisited {
+                            incrementRestaurantGoal()
+                        }
                     } label: {
                         HStack(spacing: 10) {
                             Image(systemName: hasVisited ? "checkmark.square.fill" : "square")
@@ -250,6 +254,30 @@ struct RestaurantDetailView: View {
     }
 
     // MARK: - Save Feedback
+
+    func incrementRestaurantGoal() {
+        let keyGoals = "goals_v1"
+
+        var goals: [GoalItem] = []
+        if let data = UserDefaults.standard.data(forKey: keyGoals),
+           let decoded = try? JSONDecoder().decode([GoalItem].self, from: data) {
+            goals = decoded
+        }
+
+        guard let idx = goals.firstIndex(where: { g in
+            g.completedAt == nil && GoalKeywords.isFoodRelated(g.title)
+        }) else { return }
+
+        goals[idx].progress += 1
+        if goals[idx].progress >= goals[idx].target {
+            goals[idx].progress = goals[idx].target
+            goals[idx].completedAt = Date()
+        }
+
+        if let gData = try? JSONEncoder().encode(goals) {
+            UserDefaults.standard.set(gData, forKey: keyGoals)
+        }
+    }
 
     func saveReview() {
         let review = RestaurantReviewData(

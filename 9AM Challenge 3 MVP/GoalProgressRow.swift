@@ -8,28 +8,59 @@
 import SwiftUI
 
 struct GoalProgressRow: View {
-        let title: String
-        let progress: Int
-        let total: Int
+    let title: String
+    let progress: Int
+    let total: Int
+    var completed: Bool = false
+    var reward: Int? = nil
+    var onClaim: (() -> Void)? = nil
 
-        var body: some View {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text(title)
-                        .font(.subheadline)
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                Text(title)
+                    .font(.subheadline)
 
-                    Spacer()
-
-                    Text("\(progress)/\(total)")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                if completed {
+                    Image(systemName: "flag.checkered")
+                        .font(.caption2)
+                        .foregroundStyle(.green)
                 }
 
-                ProgressView(
-                    value: Double(progress),
-                    total: Double(total)
-                )
-                .tint(.orange)
+                Spacer()
+
+                Text("\(progress)/\(total)")
+                    .font(.caption.monospacedDigit())
+                    .foregroundStyle(.secondary)
+            }
+
+            ProgressView(
+                value: Double(progress),
+                total: Double(max(total, 1))
+            )
+            .tint(completed ? .green : .orange)
+
+            if completed {
+                if let onClaim {
+                    Button {
+                        onClaim()
+                    } label: {
+                        Label(
+                            reward.map { "Claim +🪙\($0)" } ?? "Claim Reward",
+                            systemImage: "gift.fill"
+                        )
+                        .font(.caption.weight(.semibold))
+                        .frame(maxWidth: .infinity)
+                        .foregroundStyle(.white)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.green)
+                } else {
+                    Text("Claim your reward in the Goals tab")
+                        .font(.caption2)
+                        .foregroundStyle(.green)
+                }
             }
         }
     }
+}

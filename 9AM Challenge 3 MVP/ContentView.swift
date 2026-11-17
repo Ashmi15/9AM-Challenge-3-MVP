@@ -14,11 +14,12 @@ struct ContentView: View {
             Tab("Home", systemImage: "house.fill") {
                 HomeView()
             }
-            
+            Tab("Goals", systemImage: "target") {
+                GoalsView()
+            }
             Tab("Munchie Mixer", systemImage: "mug.fill") {
                 MunchieMixerView()
             }
-            
             Tab("Shop", systemImage: "bag.fill") {
                 ShopView()
             }
