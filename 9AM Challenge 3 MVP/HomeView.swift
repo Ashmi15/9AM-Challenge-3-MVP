@@ -19,6 +19,7 @@ private struct HomeGoalItem: Codable, Identifiable {
 
 struct HomeView: View {
     @State private var activeGoals: [HomeGoalItem] = []
+    @State private var completedGoalsAwaitingClaim = 0
     @State private var currency = 0
 
     var body: some View {
@@ -34,9 +35,10 @@ struct HomeView: View {
                                 .multilineTextAlignment(.center)
                                 .frame(maxWidth: .infinity, alignment: .center)
                                 .overlay(alignment: .trailing) {
-                                    Text("🪙 \(currency)")
+                                    Text("💰 \(currency)")
                                         .font(.headline)
                                         .foregroundStyle(.orange)
+                                        .offset(x: -20,y: -5)
                                 }
 
                             Text("Are you ready for your next food adventure?")
@@ -90,7 +92,7 @@ struct HomeView: View {
                                         }
                                         .frame(maxWidth: .infinity, minHeight: 70)
                                     } else {
-                                        ForEach(Array(activeGoals.prefix(2))) { g in
+                                        ForEach(activeGoals) { g in
                                             GoalProgressRow(
                                                 title: g.title,
                                                 progress: g.progress,
@@ -100,6 +102,18 @@ struct HomeView: View {
                                                 onClaim: g.completedAt != nil ? { claimReward(g) } : nil
                                             )
                                         }
+                                    }
+
+                                    if completedGoalsAwaitingClaim > 0 {
+                                        Label(
+                                            completedGoalsAwaitingClaim == 1
+                                                ? "1 completed goal is waiting! Claim your coins in the Goals tab."
+                                                : "\(completedGoalsAwaitingClaim) completed goals are waiting! Claim your coins in the Goals tab.",
+                                            systemImage: "gift.fill"
+                                        )
+                                        .font(.caption.weight(.semibold))
+                                        .foregroundStyle(.green)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
                                     }
                                 }
                                 .padding(20)
@@ -129,10 +143,16 @@ struct HomeView: View {
     func loadGoals() {
         if let data = UserDefaults.standard.data(forKey: "goals_v1"),
            let decoded = try? JSONDecoder().decode([HomeGoalItem].self, from: data) {
-            // Keep completed goals visible until their reward has been claimed.
-            activeGoals = decoded.filter { $0.rewardClaimed != true }
+            // Show every goal that is still in progress and hasn't been completed.
+            activeGoals = decoded.filter { $0.completedAt == nil }
+
+            // Completed goals live in the Goals tab until their reward is claimed.
+            completedGoalsAwaitingClaim = decoded
+                .filter { $0.completedAt != nil && $0.rewardClaimed != true }
+                .count
         } else {
             activeGoals = []
+            completedGoalsAwaitingClaim = 0
         }
 
         currency = UserDefaults.standard.integer(forKey: "goal_currency_v1")
