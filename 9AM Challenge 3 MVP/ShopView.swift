@@ -33,19 +33,21 @@ enum AccessoryCategory: String, CaseIterable, Identifiable {
     }
 
     // Where the accessory sits on the munchkin preview.
+    // Tuned for the ~115pt munchkin emoji: head items span the whole head
+    // and face items cover the eyes.
     var previewOffset: CGSize {
         switch self {
         case .head: return CGSize(width: 0, height: -62)
-        case .face: return CGSize(width: 0, height: -18)
+        case .face: return CGSize(width: 0, height: -10)
         case .neck: return CGSize(width: 0, height: 46)
         }
     }
 
     var previewSize: CGFloat {
         switch self {
-        case .head: return 44
-        case .face: return 32
-        case .neck: return 34
+        case .head: return 120
+        case .face: return 72
+        case .neck: return 46
         }
     }
 }
@@ -59,6 +61,19 @@ struct ShopAccessory: Identifiable, Hashable {
     let about: String
     /// How many accessories the user must own before this one is revealed.
     let unlockRequirement: Int
+
+    // Some emoji sit differently inside their box, so they can nudge the
+    // preview position/size. Nil falls back to the category default.
+    var previewOffsetOverride: CGSize? = nil
+    var previewSizeOverride: CGFloat? = nil
+
+    var previewOffset: CGSize {
+        previewOffsetOverride ?? category.previewOffset
+    }
+
+    var previewSize: CGFloat {
+        previewSizeOverride ?? category.previewSize
+    }
 }
 
 enum ShopCatalogue {
@@ -69,11 +84,13 @@ enum ShopCatalogue {
         ),
         ShopAccessory(
             id: "pink_bow", name: "Pink Bow", emoji: "🎀", price: 20, category: .head,
-            about: "A little sweetness with every bite.", unlockRequirement: 0
+            about: "A little sweetness with every bite.", unlockRequirement: 0,
+            previewOffsetOverride: CGSize(width: 0, height: -44)
         ),
         ShopAccessory(
             id: "snack_cap", name: "Snack Cap", emoji: "🧢", price: 25, category: .head,
-            about: "For casual cafe crawls and snack runs.", unlockRequirement: 0
+            about: "For casual cafe crawls and snack runs.", unlockRequirement: 0,
+            previewOffsetOverride: CGSize(width: 0, height: -46)
         ),
         ShopAccessory(
             id: "royal_crown", name: "Royal Crown", emoji: "👑", price: 60, category: .head,
@@ -89,7 +106,8 @@ enum ShopCatalogue {
         ),
         ShopAccessory(
             id: "swim_goggles", name: "Snorkel Goggles", emoji: "🥽", price: 40, category: .face,
-            about: "For diving straight into the dessert menu.", unlockRequirement: 0
+            about: "For diving straight into the dessert menu.", unlockRequirement: 0,
+            previewOffsetOverride: CGSize(width: 0, height: 4)
         ),
         ShopAccessory(
             id: "cosy_scarf", name: "Cosy Scarf", emoji: "🧣", price: 20, category: .neck,
@@ -204,7 +222,7 @@ struct ShopView: View {
 
             Spacer(minLength: 8)
 
-            Text("🪙 \(coins)")
+            Text("💰 \(coins)")
                 .font(.headline)
                 .foregroundStyle(.orange)
                 .padding(.horizontal, 14)
@@ -272,7 +290,7 @@ struct ShopView: View {
                             .font(.caption2)
                             .foregroundStyle(deepGreen.opacity(0.8))
                     } else {
-                        Text("🪙 \(item.price)")
+                        Text("💰 \(item.price)")
                             .font(.caption.weight(.bold))
                             .foregroundStyle(affordable ? Color.white : Color.black.opacity(0.35))
                             .padding(.horizontal, 14)
@@ -376,12 +394,12 @@ struct ShopView: View {
 
                 ForEach(equippedAccessories) { item in
                     Text(item.emoji)
-                        .font(.system(size: item.category.previewSize))
-                        .offset(item.category.previewOffset)
-                        .shadow(color: .black.opacity(0.12), radius: 2, y: 1)
+                        .font(.system(size: item.previewSize))
+                        .offset(item.previewOffset)
+                        .shadow(color: .black.opacity(0.12), radius: 3, y: 2)
                 }
             }
-            .frame(height: 210)
+            .frame(height: 260)
             .frame(maxWidth: .infinity)
 
             Text(
@@ -596,8 +614,8 @@ private struct AccessoryDetailSheet: View {
             } label: {
                 Text(
                     coins >= item.price
-                        ? "Buy for 🪙 \(item.price)"
-                        : "Not enough coins (🪙 \(coins))"
+                        ? "Buy for 💰 \(item.price)"
+                        : "Not enough coins (💰 \(coins))"
                 )
                 .font(.headline)
                 .frame(maxWidth: .infinity)

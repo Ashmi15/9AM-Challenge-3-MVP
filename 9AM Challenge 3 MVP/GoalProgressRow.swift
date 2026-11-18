@@ -13,7 +13,7 @@ struct GoalProgressRow: View {
     let total: Int
     var completed: Bool = false
     var reward: Int? = nil
-    var onClaim: (() -> Void)? = nil
+    var onClaim: (() -> Void)? = nil // don't really understand ⭐️
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -46,7 +46,7 @@ struct GoalProgressRow: View {
                         onClaim()
                     } label: {
                         Label(
-                            reward.map { "Claim +🪙\($0)" } ?? "Claim Reward",
+                            reward.map { "Claim +💰\($0)" } ?? "Claim Reward", // dont really understand ⭐️
                             systemImage: "gift.fill"
                         )
                         .font(.caption.weight(.semibold))

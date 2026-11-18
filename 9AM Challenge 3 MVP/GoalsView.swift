@@ -49,6 +49,7 @@ struct GoalsView: View {
     @State private var currency: Int = 0
 
     @State private var showAdd = false
+    @State private var showClearHistory = false
     @State private var newTitle = ""
     @State private var newTarget = 1
 
@@ -73,7 +74,7 @@ struct GoalsView: View {
                         .font(.largeTitle)
                         .fontWeight(.bold)
                     Spacer()
-                    Text("🪙 \(currency)")
+                    Text("💰 \(currency)")
                         .font(.headline)
                         .foregroundStyle(.orange)
                 }
@@ -135,10 +136,22 @@ struct GoalsView: View {
                     .rowStyling(top: 12, bottom: 4)
 
                 // History
-                Text("History")
-                    .font(.title2)
-                    .fontWeight(.semibold)
-                    .rowStyling(top: 8, bottom: 0)
+                HStack(alignment: .firstTextBaseline) {
+                    Text("History")
+                        .font(.title2)
+                        .fontWeight(.semibold)
+
+                    Spacer()
+
+                    if !history.isEmpty {
+                        Button("Clear") {
+                            showClearHistory = true
+                        }
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.orange)
+                    }
+                }
+                .rowStyling(top: 8, bottom: 0)
 
                 if history.isEmpty {
                     Text("No completed goals yet.")
@@ -154,7 +167,7 @@ struct GoalsView: View {
                                     .foregroundStyle(.secondary)
                             }
                             Spacer()
-                            Text("+🪙\(h.reward)")
+                            Text("+💰\(h.reward)")
                                 .fontWeight(.semibold)
                                 .foregroundStyle(.orange)
                         }
@@ -170,6 +183,18 @@ struct GoalsView: View {
             .background(backgroundColor)
             .navigationBarHidden(true)
             .onAppear(perform: load)
+            .confirmationDialog(
+                "Clear goal history?",
+                isPresented: $showClearHistory,
+                titleVisibility: .visible
+            ) {
+                Button("Clear History", role: .destructive) {
+                    clearHistory()
+                }
+                Button("Cancel", role: .cancel) { }
+            } message: {
+                Text("This removes your completed goal records. Your coins and active goals stay as they are.")
+            }
             .sheet(isPresented: $showAdd) {
                 NavigationStack {
                     Form {
@@ -239,7 +264,7 @@ struct GoalsView: View {
                 Button {
                     claimReward(g.id)
                 } label: {
-                    Label("Claim +🪙\(GoalReward.coins(for: g.difficulty))", systemImage: "gift.fill")
+                    Label("Claim +💰\(GoalReward.coins(for: g.difficulty))", systemImage: "gift.fill")
                         .font(.subheadline.weight(.semibold))
                         .frame(maxWidth: .infinity)
                         .foregroundStyle(.white)
@@ -318,6 +343,20 @@ struct GoalsView: View {
         if didMigrate {
             save()
         }
+    }
+
+    func clearHistory() {
+        // Keep any legacy paid-out goals marked as claimed before the records
+        // that prove it are removed.
+        let paidTitles = Set(history.map { $0.title })
+        for index in goals.indices where goals[index].completedAt != nil
+            && goals[index].rewardClaimed == nil
+            && paidTitles.contains(goals[index].title) {
+            goals[index].rewardClaimed = true
+        }
+
+        history = []
+        save()
     }
 
     func save() {
