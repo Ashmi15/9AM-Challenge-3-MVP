@@ -94,7 +94,8 @@ struct GoalsView: View {
     @State private var currency: Int = 0
 
     @State private var showAdd = false
-    @State private var showClearHistory = false
+    @State private var clearPrompt: ClearPrompt?
+    @State private var goalPendingDeletion: GoalItem?
     @State private var newTitle = ""
     @State private var newTarget = 1
 
@@ -144,10 +145,22 @@ struct GoalsView: View {
                 }
 
                 // Active goals
-                Text("Active Goals")
-                    .font(.title2)
-                    .fontWeight(.semibold)
-                    .rowStyling(top: 12, bottom: 0)
+                HStack(alignment: .firstTextBaseline) {
+                    Text("Active Goals")
+                        .font(.title2)
+                        .fontWeight(.semibold)
+
+                    Spacer()
+
+                    if !activeGoals.isEmpty {
+                        Button("Clear") {
+                            clearPrompt = .active
+                        }
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.orange)
+                    }
+                }
+                .rowStyling(top: 12, bottom: 0)
 
                 if activeGoals.isEmpty {
                     Text(
@@ -212,7 +225,7 @@ struct GoalsView: View {
 
                     if !history.isEmpty {
                         Button("Clear") {
-                            showClearHistory = true
+                            clearPrompt = .history
                         }
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.orange)
@@ -258,17 +271,43 @@ struct GoalsView: View {
                 }
             }
             .onAppear(perform: load)
-            .confirmationDialog(
-                "Clear goal history?",
-                isPresented: $showClearHistory,
-                titleVisibility: .visible
-            ) {
-                Button("Clear History", role: .destructive) {
-                    clearHistory()
+            .fullScreenCover(item: $clearPrompt) { prompt in
+                ClearConfirmationView(
+                    prompt: prompt,
+                    totalCount: prompt == .history ? history.count : activeGoals.count,
+                    onConfirm: { count in
+                        switch prompt {
+                        case .history:
+                            clearHistory(count: count)
+                        case .active:
+                            clearActiveGoals()
+                        }
+                        clearPrompt = nil
+                    },
+                    onCancel: {
+                        clearPrompt = nil
+                    }
+                )
+            }
+            .alert(
+                "Delete \(goalPendingDeletion?.title ?? "goal")?",
+                isPresented: Binding(
+                    get: { goalPendingDeletion != nil },
+                    set: { if !$0 { goalPendingDeletion = nil } }
+                ),
+                presenting: goalPendingDeletion
+            ) { goal in
+                Button("Delete", role: .destructive) {
+                    deleteGoal(goal.id)
+                    goalPendingDeletion = nil
                 }
                 Button("Cancel", role: .cancel) { }
-            } message: {
-                Text("This removes your completed goal records. Your coins and active goals stay as they are.")
+            } message: { goal in
+                if goal.completedAt != nil && goal.rewardClaimed != true {
+                    Text("This goal is completed and still has coins to claim. Deleting it forfeits the reward.")
+                } else {
+                    Text("This removes the goal from your list.")
+                }
             }
             .sheet(isPresented: $showAdd) {
                 NavigationStack {
@@ -329,6 +368,18 @@ struct GoalsView: View {
                 Text(g.difficulty)
                     .font(.caption)
                     .foregroundStyle(.orange)
+
+                Button {
+                    goalPendingDeletion = g
+                } label: {
+                    Image(systemName: "trash")
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                        .padding(4)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Delete \(g.title)")
             }
 
             ProgressView(value: Double(g.progress), total: Double(max(g.target, 1)))
@@ -372,6 +423,11 @@ struct GoalsView: View {
         goals.append(GoalItem(title: t, target: newTarget, progress: 0, difficulty: difficultyForTarget(newTarget)))
         newTitle = ""
         newTarget = 1
+        save()
+    }
+
+    func clearActiveGoals() {
+        goals.removeAll { $0.completedAt == nil }
         save()
     }
 
@@ -431,11 +487,18 @@ struct GoalsView: View {
         }
     }
 
-    func clearHistory() {
-        // Only the history records are removed. Goals that still say
-        // rewardClaimed != true stay claimable, so clearing the log can never
-        // swallow a reward the user has not collected yet.
-        history = []
+    /// Removes the oldest `count` history records. Goals that still say
+    /// rewardClaimed != true stay claimable, so clearing the log can never
+    /// swallow a reward the user has not collected yet.
+    func clearHistory(count: Int) {
+        guard count > 0 else { return }
+
+        if count >= history.count {
+            history = []
+        } else {
+            let oldestFirst = history.sorted { $0.completedAt < $1.completedAt }
+            history = Array(oldestFirst.suffix(from: count))
+        }
         save()
     }
 
@@ -447,6 +510,222 @@ struct GoalsView: View {
             UserDefaults.standard.set(data, forKey: "goal_history_v1")
         }
         UserDefaults.standard.set(currency, forKey: "goal_currency_v1")
+    }
+}
+
+/// Which list a full-screen clear confirmation is asking about.
+enum ClearPrompt: String, Identifiable {
+    case history
+    case active
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .history: return "Clear history?"
+        case .active: return "Clear active goals?"
+        }
+    }
+
+    var message: String {
+        switch self {
+        case .history:
+            return "This removes completed goal records. Your coins and active goals stay as they are."
+        case .active:
+            return "This removes the goals you're still working on. Completed goals waiting to be claimed, your coins and your history stay."
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .history: return "clock.arrow.circlepath"
+        case .active: return "checklist.unchecked"
+        }
+    }
+}
+
+/// Full-screen confirmation used by both Clear buttons so the warning is
+/// impossible to miss instead of tucked into a bottom action sheet. History
+/// also lets you pick how many records to remove.
+private struct ClearConfirmationView: View {
+    let prompt: ClearPrompt
+    let totalCount: Int
+    let onConfirm: (Int) -> Void
+    let onCancel: () -> Void
+
+    @State private var count: Int
+
+    private let backgroundColor = Color(red: 1.0, green: 0.97, blue: 0.93)
+
+    init(
+        prompt: ClearPrompt,
+        totalCount: Int,
+        onConfirm: @escaping (Int) -> Void,
+        onCancel: @escaping () -> Void
+    ) {
+        self.prompt = prompt
+        self.totalCount = totalCount
+        self.onConfirm = onConfirm
+        self.onCancel = onCancel
+        _count = State(initialValue: max(totalCount, 1))
+    }
+
+    private var showsCountPicker: Bool {
+        prompt == .history && totalCount > 1
+    }
+
+    private var isEverything: Bool {
+        count >= totalCount
+    }
+
+    private var messageText: String {
+        guard prompt == .history, totalCount > 1 else { return prompt.message }
+        return "You have \(totalCount) completed goal records. Choose how many to remove — the oldest go first."
+    }
+
+    private var confirmTitle: String {
+        switch prompt {
+        case .history:
+            if totalCount <= 1 {
+                return "Clear History"
+            }
+            let noun = count == 1 ? "Record" : "Records"
+            return isEverything
+                ? "Clear All \(totalCount) Records"
+                : "Clear \(count) \(noun)"
+        case .active:
+            return "Clear Active Goals"
+        }
+    }
+
+    var body: some View {
+        ZStack {
+            backgroundColor
+                .ignoresSafeArea()
+
+            VStack(spacing: 18) {
+                Spacer(minLength: 12)
+
+                Image(systemName: prompt.icon)
+                    .font(.system(size: 56, weight: .semibold))
+                    .foregroundStyle(.orange)
+                    .frame(width: 118, height: 118)
+                    .background(Circle().fill(Color.orange.opacity(0.15)))
+
+                Text(prompt.title)
+                    .font(.title.weight(.bold))
+                    .multilineTextAlignment(.center)
+
+                Text(messageText)
+                    .font(.body)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 8)
+
+                if showsCountPicker {
+                    countPicker
+                }
+
+                Spacer(minLength: 8)
+
+                VStack(spacing: 12) {
+                    Button(role: .destructive) {
+                        onConfirm(count)
+                    } label: {
+                        Text(confirmTitle)
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                            .foregroundStyle(Color.white)
+                            .background(Color.red)
+                            .clipShape(Capsule())
+                    }
+                    .buttonStyle(.plain)
+
+                    Button {
+                        onCancel()
+                    } label: {
+                        Text("Cancel")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                            .foregroundStyle(.orange)
+                            .background(Color.orange.opacity(0.12))
+                            .clipShape(Capsule())
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.horizontal, 24)
+                .padding(.bottom, 24)
+            }
+            .padding(.horizontal, 28)
+        }
+    }
+
+    private var countPicker: some View {
+        VStack(spacing: 14) {
+            HStack(spacing: 20) {
+                Button {
+                    count = max(1, count - 1)
+                } label: {
+                    Image(systemName: "minus")
+                        .font(.headline)
+                        .foregroundStyle(count > 1 ? Color.orange : Color.secondary.opacity(0.4))
+                        .frame(width: 48, height: 48)
+                        .background(Circle().fill(Color.white))
+                }
+                .buttonStyle(.plain)
+                .disabled(count <= 1)
+                .accessibilityLabel("One fewer record")
+                .accessibilityValue("\(count)")
+
+                VStack(spacing: 0) {
+                    Text("\(count)")
+                        .font(.system(size: 44, weight: .bold, design: .rounded))
+                        .monospacedDigit()
+                        .foregroundStyle(.orange)
+
+                    Text(count == 1 ? "record" : "records")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                }
+                .frame(minWidth: 96)
+
+                Button {
+                    count = min(totalCount, count + 1)
+                } label: {
+                    Image(systemName: "plus")
+                        .font(.headline)
+                        .foregroundStyle(count < totalCount ? Color.orange : Color.secondary.opacity(0.4))
+                        .frame(width: 48, height: 48)
+                        .background(Circle().fill(Color.white))
+                }
+                .buttonStyle(.plain)
+                .disabled(count >= totalCount)
+                .accessibilityLabel("One more record")
+                .accessibilityValue("\(count)")
+            }
+
+            HStack(spacing: 20) {
+                Button("Select All \(totalCount)") {
+                    count = totalCount
+                }
+                .disabled(isEverything)
+
+                Button("Just 1") {
+                    count = 1
+                }
+                .disabled(count == 1)
+            }
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(.orange)
+        }
+        .padding(.vertical, 16)
+        .padding(.horizontal, 22)
+        .background(
+            RoundedRectangle(cornerRadius: 24)
+                .fill(Color.white.opacity(0.75))
+        )
     }
 }
 
