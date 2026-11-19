@@ -50,10 +50,6 @@ struct WeeklyRecsView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 8) {
 
-                Text("Weekly Recommendations")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-
                 Text("Handpicked by Munchkin, just for you!")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
@@ -76,6 +72,8 @@ struct WeeklyRecsView: View {
         .background(
             Color(red: 1.0, green: 0.97, blue: 0.93)
         )
+        .navigationTitle("Weekly Recommendations")
+        .navigationBarTitleDisplayMode(.inline)
 
         // Opens the half-sheet
         .sheet(item: $selectedRestaurant) { restaurant in

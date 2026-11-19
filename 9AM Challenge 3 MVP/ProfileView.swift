@@ -60,15 +60,9 @@ struct ProfileView: View {
                 VStack(spacing: 25) {
 
                     // MARK: Profile Header
-                    VStack(spacing: 10) {
-                        Text("My Munchkin Profile")
-                            .font(.largeTitle)
-                            .fontWeight(.bold)
-
-                        Text("Your food adventure, your rules!")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
+                    Text("Your food adventure, your rules!")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
 
                     // MARK: Food Persona
                     HStack(spacing: 15) {
@@ -193,7 +187,8 @@ struct ProfileView: View {
                 .padding(20)
             }
             .background(backgroundColor)
-            .navigationBarHidden(true)
+            .navigationTitle("My Munchkin Profile")
+            .navigationBarTitleDisplayMode(.large)
         }
     }
 }

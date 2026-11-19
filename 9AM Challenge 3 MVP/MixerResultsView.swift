@@ -48,10 +48,6 @@ struct MixerResultsView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
 
-                Text("Your Munchie Matches! 🐱")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-
                 Text("Based on your cravings: \(selectedCravings.joined(separator: ", "))")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
@@ -109,6 +105,8 @@ struct MixerResultsView: View {
         .background(
             Color(red: 1.0, green: 0.97, blue: 0.93)
         )
+        .navigationTitle("Your Munchie Matches! 🐱")
+        .navigationBarTitleDisplayMode(.inline)
     }
 
     func explanation(

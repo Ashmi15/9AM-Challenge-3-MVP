@@ -13,6 +13,7 @@ enum AccessoryCategory: String, CaseIterable, Identifiable {
     case head
     case face
     case neck
+    case extra
 
     var id: String { rawValue }
 
@@ -21,6 +22,7 @@ enum AccessoryCategory: String, CaseIterable, Identifiable {
         case .head: return "Head"
         case .face: return "Face"
         case .neck: return "Neck"
+        case .extra: return "Extra"
         }
     }
 
@@ -28,26 +30,28 @@ enum AccessoryCategory: String, CaseIterable, Identifiable {
         switch self {
         case .head: return "🎩"
         case .face: return "🕶️"
-        case .neck: return "🧣"
+        case .neck: return "🌺"
+        case .extra: return "☂️"
         }
     }
 
     // Where the accessory sits on the munchkin preview.
-    // Tuned for the ~115pt munchkin emoji: head items span the whole head
-    // and face items cover the eyes.
+    // Tuned for the ~115pt munchkin emoji.
     var previewOffset: CGSize {
         switch self {
-        case .head: return CGSize(width: 0, height: -62)
-        case .face: return CGSize(width: 0, height: -10)
-        case .neck: return CGSize(width: 0, height: 46)
+        case .head: return CGSize(width: 0, height: -52)
+        case .face: return CGSize(width: 0, height: -6)
+        case .neck: return CGSize(width: 0, height: 70)
+        case .extra: return CGSize(width: 78, height: 26)
         }
     }
 
     var previewSize: CGFloat {
         switch self {
-        case .head: return 120
-        case .face: return 72
-        case .neck: return 46
+        case .head: return 98
+        case .face: return 66
+        case .neck: return 58
+        case .extra: return 66
         }
     }
 }
@@ -74,56 +78,81 @@ struct ShopAccessory: Identifiable, Hashable {
     var previewSize: CGFloat {
         previewSizeOverride ?? category.previewSize
     }
+
+    /// Coins returned when selling this accessory back to the shop.
+    /// Half the purchase price, rounded down.
+    var sellValue: Int {
+        max(1, price / 2)
+    }
 }
 
 enum ShopCatalogue {
     static let items: [ShopAccessory] = [
         ShopAccessory(
             id: "party_hat", name: "Party Hat", emoji: "🎩", price: 15, category: .head,
-            about: "A dapper top hat for fancy food outings.", unlockRequirement: 0
+            about: "A dapper top hat for fancy food outings.", unlockRequirement: 0,
+            previewOffsetOverride: CGSize(width: 0, height: -56),
+            previewSizeOverride: 98
         ),
         ShopAccessory(
             id: "pink_bow", name: "Pink Bow", emoji: "🎀", price: 20, category: .head,
             about: "A little sweetness with every bite.", unlockRequirement: 0,
-            previewOffsetOverride: CGSize(width: 0, height: -44)
+            previewOffsetOverride: CGSize(width: 0, height: -25),
+            previewSizeOverride: 60
         ),
         ShopAccessory(
-            id: "snack_cap", name: "Snack Cap", emoji: "🧢", price: 25, category: .head,
-            about: "For casual cafe crawls and snack runs.", unlockRequirement: 0,
-            previewOffsetOverride: CGSize(width: 0, height: -46)
+            id: "adventure_hat", name: "Adventure Hat", emoji: "👒", price: 25, category: .head,
+            about: "For adventurous restaurant runs and snack hauls.", unlockRequirement: 0,
+            previewOffsetOverride: CGSize(width: 15, height: -50),
+            previewSizeOverride: 92
+        ),
+        ShopAccessory(
+            id: "graduation_cap", name: "Graduation Cap", emoji: "🎓", price: 40, category: .head,
+            about: "For a munchkin with big foodie dreams.", unlockRequirement: 0,
+            previewOffsetOverride: CGSize(width: 12, height: -52),
+            previewSizeOverride: 92
         ),
         ShopAccessory(
             id: "royal_crown", name: "Royal Crown", emoji: "👑", price: 60, category: .head,
-            about: "For the true ruler of the food court.", unlockRequirement: 0
+            about: "For the true ruler of the food court.", unlockRequirement: 0,
+            previewOffsetOverride: CGSize(width: 0, height: -58),
+            previewSizeOverride: 86
         ),
         ShopAccessory(
             id: "foodie_specs", name: "Foodie Specs", emoji: "👓", price: 15, category: .face,
-            about: "Helps you spot the best dish on the menu.", unlockRequirement: 0
+            about: "Helps you spot the best dish on the menu.", unlockRequirement: 0,
+            previewOffsetOverride: CGSize(width: 0, height: 14),
+            previewSizeOverride: 64
         ),
         ShopAccessory(
             id: "cool_shades", name: "Cool Shades", emoji: "🕶️", price: 30, category: .face,
-            about: "Too cool for bland food.", unlockRequirement: 0
+            about: "Too cool for bland food.", unlockRequirement: 0,
+            previewOffsetOverride: CGSize(width: 0, height: 14),
+            previewSizeOverride: 68
         ),
         ShopAccessory(
             id: "swim_goggles", name: "Snorkel Goggles", emoji: "🥽", price: 40, category: .face,
             about: "For diving straight into the dessert menu.", unlockRequirement: 0,
-            previewOffsetOverride: CGSize(width: 0, height: 4)
+            previewOffsetOverride: CGSize(width: 0, height: 11),
+            previewSizeOverride: 70
         ),
         ShopAccessory(
-            id: "cosy_scarf", name: "Cosy Scarf", emoji: "🧣", price: 20, category: .neck,
-            about: "Keeps your munchkin warm between meals.", unlockRequirement: 0
+            id: "tropical_lei", name: "Tropical Lei", emoji: "🌺", price: 45, category: .head,
+            about: "Holiday vibes, even on a Tuesday lunch.", unlockRequirement: 4,
+            previewOffsetOverride: CGSize(width: 16, height: -40),
+            previewSizeOverride: 44
         ),
         ShopAccessory(
-            id: "bead_necklace", name: "Bead Necklace", emoji: "📿", price: 35, category: .neck,
-            about: "A little bling with your brunch.", unlockRequirement: 0
+            id: "butterfly_pin", name: "Butterfly Pin", emoji: "🦋", price: 55, category: .head,
+            about: "A flutter of colour for the fanciest foodie.", unlockRequirement: 6,
+            previewOffsetOverride: CGSize(width: 16, height: -40),
+            previewSizeOverride: 44
         ),
         ShopAccessory(
-            id: "tropical_lei", name: "Tropical Lei", emoji: "🌺", price: 45, category: .neck,
-            about: "Holiday vibes, even on a Tuesday lunch.", unlockRequirement: 4
-        ),
-        ShopAccessory(
-            id: "butterfly_pin", name: "Butterfly Pin", emoji: "🦋", price: 55, category: .neck,
-            about: "A flutter of colour for the fanciest foodie.", unlockRequirement: 6
+            id: "lucky_umbrella", name: "Lucky Umbrella", emoji: "☂️", price: 35, category: .extra,
+            about: "Always ready for a rainy-day snack run.", unlockRequirement: 0,
+            previewOffsetOverride: CGSize(width: 78, height: 26),
+            previewSizeOverride: 66
         )
     ]
 }
@@ -147,6 +176,7 @@ struct ShopView: View {
 
     @State private var tab: ShopTab = .buy
     @State private var selectedItem: ShopAccessory?
+    @State private var saleCandidate: ShopAccessory?
 
     // Shares the coin balance with the Goals tab.
     @AppStorage("goal_currency_v1") private var coins = 0
@@ -172,7 +202,7 @@ struct ShopView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 18) {
-                    header
+                    subtitle
 
                     Picker("Shop section", selection: $tab) {
                         ForEach(ShopTab.allCases) { shopTab in
@@ -191,7 +221,15 @@ struct ShopView: View {
                 .padding(20)
             }
             .background(backgroundColor)
-            .navigationBarHidden(true)
+            .navigationTitle("Munchkin Shop")
+            .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Text("💰 \(coins)")
+                        .font(.headline)
+                        .foregroundStyle(.orange)
+                }
+            }
             .sheet(item: $selectedItem) { item in
                 AccessoryDetailSheet(
                     item: item,
@@ -200,37 +238,35 @@ struct ShopView: View {
                     wearing: equipped[item.category] == item.id,
                     unlocked: isUnlocked(item),
                     onBuy: { buy(item) },
-                    onToggleWear: { toggleEquip(item) }
+                    onToggleWear: { toggleEquip(item) },
+                    onSell: { sell(item) }
                 )
+            }
+            .alert(
+                "Sell \(saleCandidate?.name ?? "accessory")?",
+                isPresented: Binding(
+                    get: { saleCandidate != nil },
+                    set: { if !$0 { saleCandidate = nil } }
+                ),
+                presenting: saleCandidate
+            ) { item in
+                Button("Sell for 💰 \(item.sellValue)", role: .destructive) {
+                    sell(item)
+                }
+                Button("Cancel", role: .cancel) { }
+            } message: { item in
+                Text("You'll get 💰 \(item.sellValue) back. You can buy it again later.")
             }
         }
     }
 
     // MARK: Header
 
-    private var header: some View {
-        HStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Munchkin Shop")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-
-                Text("Spend your goal coins on a new look!")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-
-            Spacer(minLength: 8)
-
-            Text("💰 \(coins)")
-                .font(.headline)
-                .foregroundStyle(.orange)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 8)
-                .background(Color.white)
-                .clipShape(Capsule())
-                .fixedSize()
-        }
+    private var subtitle: some View {
+        Text("Spend your goal coins on a new look!")
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     // MARK: Buy
@@ -241,7 +277,7 @@ struct ShopView: View {
                 .font(.title2)
                 .fontWeight(.bold)
 
-            Text("Tap an accessory to see more. Anything you own can be worn from My Munchkin.")
+            Text("Tap an accessory to buy, wear or sell it.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
@@ -320,6 +356,7 @@ struct ShopView: View {
         case .head: return Color(red: 0.98, green: 0.82, blue: 0.78)
         case .face: return Color(red: 0.78, green: 0.93, blue: 0.84)
         case .neck: return Color(red: 1.0, green: 0.92, blue: 0.72)
+        case .extra: return Color(red: 0.90, green: 0.85, blue: 0.97)
         }
     }
 
@@ -405,7 +442,7 @@ struct ShopView: View {
             Text(
                 equippedAccessories.isEmpty
                     ? "Your munchkin is ready for a makeover!"
-                    : "Tap an accessory below to wear it, or tap it again to take it off."
+                    : "Tap to wear or remove. Touch and hold to sell."
             )
             .font(.caption)
             .foregroundStyle(deepGreen)
@@ -462,12 +499,23 @@ struct ShopView: View {
         .buttonStyle(.plain)
         .accessibilityLabel(item.name)
         .accessibilityValue(isWearing ? "Wearing" : "Not wearing")
+        .contextMenu {
+            Button(role: .destructive) {
+                saleCandidate = item
+            } label: {
+                Label("Sell for 💰 \(item.sellValue)", systemImage: "minus.circle")
+            }
+        }
     }
 
     // MARK: Saved state
 
     private var ownedIDs: Set<String> {
-        Set(ownedRaw.split(separator: ",").map { String($0) })
+        // Ignore ids for retired accessories so the "x/y owned" count and the
+        // unlock thresholds always line up with the current catalogue.
+        let known = Set(ShopCatalogue.items.map(\.id))
+        let saved = Set(ownedRaw.split(separator: ",").map { String($0) })
+        return saved.intersection(known)
     }
 
     private var equipped: [AccessoryCategory: String] {
@@ -486,7 +534,7 @@ struct ShopView: View {
     }
 
     private var equippedAccessories: [ShopAccessory] {
-        AccessoryCategory.allCases.compactMap { category in
+        AccessoryCategory.allCases.compactMap { category -> ShopAccessory? in
             guard let id = equipped[category] else { return nil }
             return ShopCatalogue.items.first { $0.id == id }
         }
@@ -523,6 +571,21 @@ struct ShopView: View {
         }
     }
 
+    private func sell(_ item: ShopAccessory) {
+        guard ownedIDs.contains(item.id) else { return }
+
+        coins += item.sellValue
+
+        var owned = ownedIDs
+        owned.remove(item.id)
+        ownedRaw = owned.sorted().joined(separator: ",")
+
+        // Selling what you're wearing takes it off too.
+        if equipped[item.category] == item.id {
+            setEquipped(nil, for: item.category)
+        }
+    }
+
     private func setEquipped(_ id: String?, for category: AccessoryCategory) {
         var map = equipped
         map[category] = id
@@ -543,8 +606,10 @@ private struct AccessoryDetailSheet: View {
     let unlocked: Bool
     let onBuy: () -> Void
     let onToggleWear: () -> Void
+    let onSell: () -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @State private var showSellConfirmation = false
 
     private let deepGreen = Color(red: 0.2, green: 0.45, blue: 0.35)
     private let cream = Color(red: 1.0, green: 0.97, blue: 0.93)
@@ -577,29 +642,53 @@ private struct AccessoryDetailSheet: View {
             actionButton
         }
         .padding(24)
-        .presentationDetents([.height(400)])
+        .presentationDetents([.height(440)])
         .presentationDragIndicator(.visible)
+        .alert("Sell \(item.name)?", isPresented: $showSellConfirmation) {
+            Button("Sell for 💰 \(item.sellValue)", role: .destructive) {
+                onSell()
+                dismiss()
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("You'll get 💰 \(item.sellValue) back. You can buy it again later.")
+        }
     }
 
     @ViewBuilder
     private var actionButton: some View {
         if owned {
-            Button {
-                onToggleWear()
-                dismiss()
-            } label: {
-                Label(
-                    wearing ? "Take it off" : "Wear it",
-                    systemImage: wearing ? "xmark.circle" : "checkmark.circle.fill"
-                )
-                .font(.headline)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
-                .foregroundStyle(Color.white)
-                .background(Color.orange)
-                .clipShape(Capsule())
+            VStack(spacing: 10) {
+                Button {
+                    onToggleWear()
+                    dismiss()
+                } label: {
+                    Label(
+                        wearing ? "Take it off" : "Wear it",
+                        systemImage: wearing ? "xmark.circle" : "checkmark.circle.fill"
+                    )
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .foregroundStyle(Color.white)
+                    .background(Color.orange)
+                    .clipShape(Capsule())
+                }
+                .buttonStyle(.plain)
+
+                Button {
+                    showSellConfirmation = true
+                } label: {
+                    Label("Sell for 💰 \(item.sellValue)", systemImage: "minus.circle")
+                        .font(.subheadline.weight(.semibold))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .foregroundStyle(Color.red)
+                        .background(Color.red.opacity(0.12))
+                        .clipShape(Capsule())
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
         } else if !unlocked {
             Text("Own \(item.unlockRequirement) accessories to reveal this one.")
                 .font(.caption)

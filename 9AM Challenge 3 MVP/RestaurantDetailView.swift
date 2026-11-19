@@ -272,6 +272,10 @@ struct RestaurantDetailView: View {
         if goals[idx].progress >= goals[idx].target {
             goals[idx].progress = goals[idx].target
             goals[idx].completedAt = Date()
+            // Explicitly mark the reward as unclaimed. Completed goals with a
+            // nil flag are treated as legacy by the Goals screen, so a fresh
+            // completion must say "not paid yet" rather than leaving it unset.
+            goals[idx].rewardClaimed = false
         }
 
         if let gData = try? JSONEncoder().encode(goals) {

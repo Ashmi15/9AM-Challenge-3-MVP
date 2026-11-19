@@ -30,6 +30,51 @@ enum GoalReward {
     }
 }
 
+// MARK: - Data repairs
+
+/// One-time fixes for goal data written by older builds.
+enum GoalRewardRepair {
+    /// Restores goals that an older build hid by matching on title alone.
+    ///
+    /// That check marked a freshly completed goal as "claimed" whenever the
+    /// same title had ever been paid out before, so the goal disappeared from
+    /// the Goals tab without any coins being awarded. A genuinely claimed goal
+    /// has a history record with the same title *and* the same completion
+    /// date, so anything else with a matching title goes back to unclaimed.
+    static func runIfNeeded() {
+        let repairKey = "goals_claim_repair_v1"
+        guard !UserDefaults.standard.bool(forKey: repairKey) else { return }
+        UserDefaults.standard.set(true, forKey: repairKey)
+
+        guard let goalData = UserDefaults.standard.data(forKey: "goals_v1"),
+              var goals = try? JSONDecoder().decode([GoalItem].self, from: goalData) else { return }
+
+        let history = UserDefaults.standard.data(forKey: "goal_history_v1")
+            .flatMap { try? JSONDecoder().decode([CompletedGoalRecord].self, from: $0) } ?? []
+
+        var didRepair = false
+        for index in goals.indices {
+            guard let completedAt = goals[index].completedAt,
+                  goals[index].rewardClaimed == true else { continue }
+
+            let title = goals[index].title
+            let hasOwnRecord = history.contains {
+                $0.title == title && abs($0.completedAt.timeIntervalSince(completedAt)) < 2
+            }
+            let hasOtherRecord = history.contains { $0.title == title }
+
+            if !hasOwnRecord && hasOtherRecord {
+                goals[index].rewardClaimed = false
+                didRepair = true
+            }
+        }
+
+        if didRepair, let data = try? JSONEncoder().encode(goals) {
+            UserDefaults.standard.set(data, forKey: "goals_v1")
+        }
+    }
+}
+
 // Detects whether a goal is about eating out / trying new food places.
 enum GoalKeywords {
     private static let foodKeywords = [
@@ -56,9 +101,14 @@ struct GoalsView: View {
     private let backgroundColor = Color(red: 1.0, green: 0.97, blue: 0.93)
     private let cardColor = Color.white
 
+    /// Completed goals that still owe coins. Kept at the top of the list so
+    /// they are impossible to miss.
+    private var claimableGoals: [GoalItem] {
+        goals.filter { $0.completedAt != nil && $0.rewardClaimed != true }
+    }
+
     private var activeGoals: [GoalItem] {
-        // Keep completed goals visible until their reward has been claimed.
-        goals.filter { $0.rewardClaimed != true }
+        goals.filter { $0.completedAt == nil && $0.rewardClaimed != true }
     }
 
     private var sortedHistory: [CompletedGoalRecord] {
@@ -68,17 +118,30 @@ struct GoalsView: View {
     var body: some View {
         NavigationStack {
             List {
-                // Header
-                HStack(alignment: .firstTextBaseline) {
-                    Text("Goals")
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-                    Spacer()
-                    Text("💰 \(currency)")
-                        .font(.headline)
-                        .foregroundStyle(.orange)
+                // Completed goals waiting for their coins
+                if !claimableGoals.isEmpty {
+                    HStack(spacing: 6) {
+                        Image(systemName: "gift.fill")
+                            .foregroundStyle(.green)
+
+                        Text("Ready to Claim")
+                            .font(.title2)
+                            .fontWeight(.semibold)
+                    }
+                    .rowStyling(top: 12, bottom: 0)
+
+                    ForEach(claimableGoals) { g in
+                        goalRow(g)
+                            .rowStyling()
+                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                Button(role: .destructive) {
+                                    deleteGoal(g.id)
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
+                            }
+                    }
                 }
-                .rowStyling(top: 12, bottom: 4)
 
                 // Active goals
                 Text("Active Goals")
@@ -87,9 +150,13 @@ struct GoalsView: View {
                     .rowStyling(top: 12, bottom: 0)
 
                 if activeGoals.isEmpty {
-                    Text("No active goals. Add one below.")
-                        .foregroundStyle(.secondary)
-                        .rowStyling()
+                    Text(
+                        claimableGoals.isEmpty
+                            ? "No active goals. Add one below."
+                            : "Nothing in progress. Add another goal below."
+                    )
+                    .foregroundStyle(.secondary)
+                    .rowStyling()
                 } else {
                     ForEach(activeGoals) { g in
                         goalRow(g)
@@ -181,7 +248,15 @@ struct GoalsView: View {
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
             .background(backgroundColor)
-            .navigationBarHidden(true)
+            .navigationTitle("Goals")
+            .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Text("💰 \(currency)")
+                        .font(.headline)
+                        .foregroundStyle(.orange)
+                }
+            }
             .onAppear(perform: load)
             .confirmationDialog(
                 "Clear goal history?",
@@ -322,6 +397,9 @@ struct GoalsView: View {
     }
 
     func load() {
+        // Run before decoding so the list reflects any repaired state.
+        GoalRewardRepair.runIfNeeded()
+
         if let data = UserDefaults.standard.data(forKey: "goals_v1"),
            let decoded = try? JSONDecoder().decode([GoalItem].self, from: data) {
             goals = decoded
@@ -332,13 +410,21 @@ struct GoalsView: View {
         }
         currency = UserDefaults.standard.integer(forKey: "goal_currency_v1")
 
-        // Goals completed before rewards became claimable were already paid out.
-        // Mark those as claimed so they can't be collected twice.
-        let paidTitles = Set(history.map { $0.title })
+        // Goals completed by very old builds may already have been paid out.
+        // Only treat one as paid if history has a record for the same title at
+        // the same completion time; title alone is not proof (that was the bug
+        // that hid freshly completed goals).
         var didMigrate = false
         for index in goals.indices where goals[index].completedAt != nil && goals[index].rewardClaimed == nil {
-            goals[index].rewardClaimed = paidTitles.contains(goals[index].title)
-            didMigrate = true
+            guard let completedAt = goals[index].completedAt else { continue }
+            let title = goals[index].title
+            let wasPaid = history.contains {
+                $0.title == title && abs($0.completedAt.timeIntervalSince(completedAt)) < 2
+            }
+            if wasPaid {
+                goals[index].rewardClaimed = true
+                didMigrate = true
+            }
         }
         if didMigrate {
             save()
@@ -346,15 +432,9 @@ struct GoalsView: View {
     }
 
     func clearHistory() {
-        // Keep any legacy paid-out goals marked as claimed before the records
-        // that prove it are removed.
-        let paidTitles = Set(history.map { $0.title })
-        for index in goals.indices where goals[index].completedAt != nil
-            && goals[index].rewardClaimed == nil
-            && paidTitles.contains(goals[index].title) {
-            goals[index].rewardClaimed = true
-        }
-
+        // Only the history records are removed. Goals that still say
+        // rewardClaimed != true stay claimable, so clearing the log can never
+        // swallow a reward the user has not collected yet.
         history = []
         save()
     }

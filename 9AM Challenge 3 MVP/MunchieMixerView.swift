@@ -36,16 +36,10 @@ struct MunchieMixerView: View {
             ScrollView {
                 VStack(spacing: 30) {
 
-                    // MARK: Title
-                    VStack(spacing: 8) {
-                        Text("The Munchie Mixer!")
-                            .font(.largeTitle)
-                            .fontWeight(.bold)
-
-                        Text("Mix your cravings, find your munch!")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
+                    // MARK: Subtitle
+                    Text("Mix your cravings, find your munch!")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
 
                     // MARK: Mascot
                     HStack(spacing: 15) {
@@ -197,6 +191,8 @@ struct MunchieMixerView: View {
                 .padding(20)
             }
             .background(backgroundColor)
+            .navigationTitle("The Munchie Mixer!")
+            .navigationBarTitleDisplayMode(.large)
             .navigationDestination(isPresented: $showResults) {
                 MixerResultsView(
                     selectedCravings: Array(selectedCravings).sorted()
