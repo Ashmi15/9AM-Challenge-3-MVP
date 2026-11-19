@@ -12,70 +12,57 @@ struct MixerResultsView: View {
 
     let selectedCravings: [String]
 
-    // Temporary recommendation data
-    let restaurants: [(emoji: String, name: String, description: String, tags: [String])] = [
-        ("🍜", "Mala Hotpot", "Spicy • Chinatown", ["Spicy", "Salty", "Savoury"]),
-        ("🍣", "Sushi Corner", "Japanese • Orchard", ["Savoury", "Salty"]),
-        ("🍛", "Curry House", "Indian • Little India", ["Spicy", "Comforting"]),
-        ("🍕", "Pizza Paradise", "Italian • Bugis", ["Savoury", "Comforting"]),
-        ("🥟", "Dumpling House", "Chinese • Tampines", ["Salty", "Comforting"]),
-        ("🍰", "Dessert Cafe", "Desserts • Bugis", ["Sweet", "Tangy"])
-    ]
+    @AppStorage("preferredLocation")
+    private var preferredLocation = "Anywhere"
 
-    // Restaurants matching the selected cravings
-    var matchedRestaurants: [(emoji: String, name: String, description: String, tags: [String])] {
-        let ranked = restaurants
-            .map { restaurant in
-                (
-                    restaurant: restaurant,
-                    score: restaurant.tags.filter {
-                        selectedCravings.contains($0)
-                    }.count
-                )
-            }
-            .filter { $0.score > 0 }
-            .sorted {
-                if $0.score != $1.score {
-                    return $0.score > $1.score
-                }
-                return $0.restaurant.name < $1.restaurant.name
-            }
+    private var region: RestaurantRegion {
+        RestaurantRegion.from(preference: preferredLocation)
+    }
 
-        return Array(ranked.prefix(3).map { $0.restaurant })
+    // Restaurants matching the selected cravings in the chosen region
+    private var matchedRestaurants: [Restaurant] {
+        RestaurantDirectory.recommendations(
+            for: selectedCravings,
+            region: region
+        )
     }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
 
+                Text("Your Munchie Matches! 🐱")
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+
                 Text("Based on your cravings: \(selectedCravings.joined(separator: ", "))")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
 
+                RegionFilterBar(selection: $preferredLocation)
+
                 if matchedRestaurants.isEmpty {
                     ContentUnavailableView(
-                        "No matches yet!",
+                        region.isAnywhere
+                            ? "No matches yet!"
+                            : "No matches in \(region.rawValue)!",
                         systemImage: "fork.knife",
-                        description: Text("Try a different craving combination.")
+                        description: Text(
+                            region.isAnywhere
+                                ? "Try a different craving combination."
+                                : "Try another region or a different craving combination."
+                        )
                     )
                 }
 
-                ForEach(matchedRestaurants, id: \.name) { restaurant in
+                ForEach(matchedRestaurants) { restaurant in
 
                     VStack(alignment: .leading, spacing: 12) {
 
                         NavigationLink {
-                            RestaurantDetailView(
-                                emoji: restaurant.emoji,
-                                name: restaurant.name,
-                                description: restaurant.description
-                            )
+                            RestaurantDetailView(restaurant: restaurant)
                         } label: {
-                            RestaurantCard(
-                                emoji: restaurant.emoji,
-                                name: restaurant.name,
-                                description: restaurant.description
-                            )
+                            RestaurantCard(restaurant: restaurant)
                         }
                         .buttonStyle(.plain)
 
@@ -105,24 +92,25 @@ struct MixerResultsView: View {
         .background(
             Color(red: 1.0, green: 0.97, blue: 0.93)
         )
-        .navigationTitle("Your Munchie Matches! 🐱")
-        .navigationBarTitleDisplayMode(.inline)
     }
 
-    func explanation(
-        for restaurant: (
-            emoji: String,
-            name: String,
-            description: String,
-            tags: [String]
-        )
-    ) -> String {
+    func explanation(for restaurant: Restaurant) -> String {
+        let matches = restaurant.matchingCravings(selectedCravings)
 
-        let matches = restaurant.tags.filter {
-            selectedCravings.contains($0)
+        guard !matches.isEmpty else {
+            return "I picked \(restaurant.name) because it's a great spot for your cravings!"
         }
 
-        return "I picked \(restaurant.name) because it matches your \(matches.joined(separator: " and ").lowercased()) cravings!"
+        return "I picked \(restaurant.name) because it matches your \(joinedList(matches)) cravings!"
+    }
+
+    private func joinedList(_ items: [String]) -> String {
+        let lowercased = items.map { $0.lowercased() }
+
+        guard let last = lowercased.last else { return "" }
+        guard lowercased.count > 1 else { return last }
+
+        return lowercased.dropLast().joined(separator: ", ") + " and " + last
     }
 }
 

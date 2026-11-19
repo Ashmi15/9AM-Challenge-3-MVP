@@ -8,25 +8,27 @@
 import SwiftUI
 
 struct RestaurantCard: View {
-    let emoji: String
-    let name: String
-    let description: String
+    let restaurant: Restaurant
 
     var body: some View {
         HStack(spacing: 15) {
-            Text(emoji)
+            Text(restaurant.emoji)
                 .font(.system(size: 42))
                 .frame(width: 70, height: 30)
                 .background(Color.blue.opacity(0.12))
                 .clipShape(RoundedRectangle(cornerRadius: 15))
 
             VStack(alignment: .leading, spacing: 5) {
-                Text(name)
+                Text(restaurant.name)
                     .font(.headline)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
 
-                Text(description)
+                Text(restaurant.description)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
             }
 
             Spacer()
@@ -41,5 +43,5 @@ struct RestaurantCard: View {
 }
 
 #Preview {
-    RestaurantCard(emoji: "emoji", name: "name", description: "desc")
+    RestaurantCard(restaurant: .preview)
 }

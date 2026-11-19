@@ -117,6 +117,10 @@ struct ProfileView: View {
                                 }
                             }
                             .tint(.teal)
+
+                            Text("Your weekly picks and Munchie Mixer results will focus on this region.")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
                         }
 
                         Divider()

@@ -11,9 +11,7 @@ import SwiftUI
 
 struct RestaurantDetailView: View {
 
-    let emoji: String
-    let name: String
-    let description: String
+    let restaurant: Restaurant
 
     // User feedback
     @State private var hasVisited = false
@@ -37,7 +35,7 @@ struct RestaurantDetailView: View {
             VStack(alignment: .leading, spacing: 25) {
 
                 // MARK: Restaurant photo
-                Text(emoji)
+                Text(restaurant.emoji)
                     .font(.system(size: 110))
                     .frame(maxWidth: .infinity)
                     .frame(height: 200)
@@ -48,11 +46,11 @@ struct RestaurantDetailView: View {
 
                 // MARK: Restaurant name
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(name)
+                    Text(restaurant.name)
                         .font(.largeTitle)
                         .fontWeight(.bold)
 
-                    Text(description)
+                    Text(restaurant.description)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
@@ -67,19 +65,32 @@ struct RestaurantDetailView: View {
                         .fontWeight(.bold)
 
                     Label(
-                        "Location: \(description)",
+                        "Location: \(restaurant.locationLine)",
                         systemImage: "mappin.circle.fill"
                     )
 
                     Label(
-                        "Budget: $10–$25 per person",
-                        systemImage: "dollarsign.circle.fill"
+                        "Cuisine: \(restaurant.cuisine)",
+                        systemImage: "fork.knife"
                     )
 
                     Label(
-                        "Cuisine: Asian",
-                        systemImage: "fork.knife"
+                        "Region: \(restaurant.region.rawValue)",
+                        systemImage: "map.circle.fill"
                     )
+
+                    if !restaurant.phone.isEmpty {
+                        Label(
+                            "Phone: \(restaurant.phone)",
+                            systemImage: "phone.circle.fill"
+                        )
+                    }
+
+                    if let websiteURL = restaurant.websiteURL {
+                        Link(destination: websiteURL) {
+                            Label("Website", systemImage: "globe")
+                        }
+                    }
                 }
 
                 Divider()
@@ -285,7 +296,7 @@ struct RestaurantDetailView: View {
 
     func saveReview() {
         let review = RestaurantReviewData(
-            restaurantName: name,
+            restaurantName: restaurant.name,
             rating: rating,
             flavours: Array(selectedFlavours),
             comment: writtenReview
@@ -294,7 +305,7 @@ struct RestaurantDetailView: View {
         if let encoded = try? JSONEncoder().encode(review) {
             UserDefaults.standard.set(
                 encoded,
-                forKey: "review_\(name)"
+                forKey: "review_\(restaurant.name)"
             )
             showConfirmation = true
         }
@@ -312,10 +323,6 @@ struct RestaurantReviewData: Codable {
 
 #Preview {
     NavigationStack {
-        RestaurantDetailView(
-            emoji: "🍜",
-            name: "Mala Hotpot",
-            description: "Spicy • Chinatown"
-        )
+        RestaurantDetailView(restaurant: .preview)
     }
 }

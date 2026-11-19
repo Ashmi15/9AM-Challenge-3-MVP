@@ -10,36 +10,35 @@ import SwiftUI
 
 struct RestaurantPreviewSheet: View {
 
-    let emoji: String
-    let name: String
-    let description: String
+    let restaurant: Restaurant
     let reason: String
 
     @Environment(\.dismiss) private var dismiss
 
     @State private var showFullDetails = false
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
 
             // Restaurant information
             HStack(spacing: 15) {
-                Text(emoji)
+                Text(restaurant.emoji)
                     .font(.system(size: 65))
                     .frame(width: 100, height: 100)
                     .background(Color.orange.opacity(0.15))
                     .clipShape(RoundedRectangle(cornerRadius: 20))
 
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(name)
+                    Text(restaurant.name)
                         .font(.title2)
                         .fontWeight(.bold)
+                        .lineLimit(2)
 
-                    Text(description)
+                    Text(restaurant.description)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
 
-                    Label("Budget-friendly", systemImage: "dollarsign.circle")
+                    Label(restaurant.area, systemImage: "mappin.circle")
                         .font(.caption)
                 }
             }
@@ -82,18 +81,14 @@ struct RestaurantPreviewSheet: View {
         .presentationDragIndicator(.visible)
         .fullScreenCover(isPresented: $showFullDetails) {
             NavigationStack {
-                RestaurantDetailView(
-                    emoji: emoji,
-                    name: name,
-                    description: description
-                )
-                .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button("Done") {
-                            showFullDetails = false
+                RestaurantDetailView(restaurant: restaurant)
+                    .toolbar {
+                        ToolbarItem(placement: .topBarTrailing) {
+                            Button("Done") {
+                                showFullDetails = false
+                            }
                         }
                     }
-                }
             }
         }
     }
@@ -101,10 +96,7 @@ struct RestaurantPreviewSheet: View {
 
 #Preview {
     RestaurantPreviewSheet(
-        emoji: "🍜",
-        name: "Mala Hotpot",
-        description: "Spicy • Chinatown",
-        reason: "You love spicy food, so I thought you'd enjoy this!"
+        restaurant: .preview,
+        reason: "You love bold, spicy flavours, so I thought you'd enjoy this!"
     )
 }
-
