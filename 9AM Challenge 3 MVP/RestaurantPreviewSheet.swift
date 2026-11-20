@@ -69,8 +69,7 @@ struct RestaurantPreviewSheet: View {
                     }
                 }
 
-                Text(MunchkinPet.emoji)
-                    .font(.system(size: 45))
+                MunchkinAvatarView(size: 45)
             }
 
             Button {

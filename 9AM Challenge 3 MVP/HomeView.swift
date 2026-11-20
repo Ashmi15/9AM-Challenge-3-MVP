@@ -9,7 +9,7 @@ import SwiftUI
 
 struct HomeView: View {
     @State private var activeGoals: [GoalItem] = []
-    @State private var completedGoalsAwaitingClaim = 0
+    @State private var claimableGoals: [GoalItem] = []
     @State private var currency = 0
     @State private var personaSnapshot = FoodPersonaStore.resolve()
 
@@ -37,8 +37,7 @@ struct HomeView: View {
                         }
 
                         HStack(spacing: 15) {
-                            Text(personaSnapshot.persona.emoji)
-                                .font(.system(size: 65))
+                            MunchkinAvatarView(persona: personaSnapshot.persona, size: 65)
 
                             VStack(alignment: .leading, spacing: 6) {
                                 Text(personaSnapshot.persona.name)
@@ -89,15 +88,36 @@ struct HomeView: View {
                             }
                         }
 
-                        if completedGoalsAwaitingClaim > 0 {
-                            Label(
-                                completedGoalsAwaitingClaim == 1
-                                    ? "1 completed goal is waiting! Claim your coins in the Goals tab."
-                                    : "\(completedGoalsAwaitingClaim) completed goals are waiting! Claim your coins in the Goals tab.",
-                                systemImage: "gift.fill"
-                            )
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.green)
+                        if !claimableGoals.isEmpty {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Label("Ready to Claim", systemImage: "gift.fill")
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(.green)
+
+                                ForEach(claimableGoals) { goal in
+                                    Button {
+                                        claimReward(goal.id)
+                                    } label: {
+                                        HStack(spacing: 8) {
+                                            Text(goal.title)
+                                                .font(.caption)
+                                                .lineLimit(1)
+
+                                            Spacer(minLength: 6)
+
+                                            Text("Claim +💰\(GoalReward.coins(for: goal.difficulty))")
+                                                .font(.caption.weight(.bold))
+                                                .foregroundStyle(.green)
+                                        }
+                                        .padding(.vertical, 9)
+                                        .padding(.horizontal, 12)
+                                        .background(Color.green.opacity(0.14))
+                                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                                    }
+                                    .buttonStyle(.plain)
+                                    .accessibilityLabel("Claim reward for \(goal.title)")
+                                }
+                            }
                             .frame(maxWidth: .infinity, alignment: .leading)
                         }
                     }
@@ -134,11 +154,16 @@ struct HomeView: View {
             .flatMap { try? JSONDecoder().decode([GoalItem].self, from: $0) } ?? []
 
         activeGoals = savedGoals.filter { $0.completedAt == nil }
-        completedGoalsAwaitingClaim = savedGoals.filter {
+        claimableGoals = savedGoals.filter {
             $0.completedAt != nil && $0.rewardClaimed != true
-        }.count
+        }
 
         currency = UserDefaults.standard.integer(forKey: "goal_currency_v1")
+    }
+
+    private func claimReward(_ id: UUID) {
+        GoalClaim.claim(id)
+        loadGoals()
     }
 }
 

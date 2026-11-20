@@ -40,11 +40,12 @@ struct MunchieMixerView: View {
                     Text("Mix your cravings, find your munch!")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
 
                     // MARK: Mascot
                     HStack(spacing: 15) {
-                        Text(MunchkinPet.emoji)
-                            .font(.system(size: 70))
+                        MunchkinAvatarView(size: 70)
 
                         Text("What would you like to eat today?")
                             .font(.headline)

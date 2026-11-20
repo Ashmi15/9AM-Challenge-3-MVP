@@ -21,6 +21,13 @@ struct RestaurantDetailView: View {
 
     @State private var showConfirmation = false
 
+    init(restaurant: Restaurant) {
+        RestaurantGoalCredits.migrateFromVisitedIfNeeded()
+        self.restaurant = restaurant
+        // Remembered separately from the visit history so unchecking sticks.
+        _hasVisited = State(initialValue: CheckedRestaurants.contains(restaurant.id))
+    }
+
     // Kept here so the detail screen can show Munchkin's dietary check too.
     @AppStorage("dietVegetarian") private var vegetarian = false
     @AppStorage("dietVegan") private var vegan = false
@@ -136,10 +143,15 @@ struct RestaurantDetailView: View {
                         .fontWeight(.bold)
 
                     Button {
-                        let wasVisited = hasVisited
-                        hasVisited.toggle()
-                        if hasVisited && !wasVisited {
-                            incrementRestaurantGoal()
+                        if hasVisited {
+                            // Unchecking gives the point back to the goal.
+                            hasVisited = false
+                            CheckedRestaurants.unmark(restaurant.id)
+                            uncheckVisit()
+                        } else {
+                            hasVisited = true
+                            CheckedRestaurants.mark(restaurant.id)
+                            recordVisitIfNeeded()
                         }
                     } label: {
                         HStack(spacing: 10) {
@@ -151,6 +163,10 @@ struct RestaurantDetailView: View {
                         }
                     }
                     .buttonStyle(.plain)
+
+                    Text("New spots count towards goals. Uncheck to take the progress back.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
 
                 // Only show feedback if visited
@@ -182,9 +198,13 @@ struct RestaurantDetailView: View {
 
             Divider()
 
-            Text("Help Munchkin Learn! \(MunchkinPet.emoji)")
-                .font(.title2)
-                .fontWeight(.bold)
+            HStack(spacing: 8) {
+                Text("Help Munchkin Learn!")
+                    .font(.title2)
+                    .fontWeight(.bold)
+
+                MunchkinAvatarView(size: 28)
+            }
 
             Text("Tell Munchkin what you thought so it can recommend better restaurants next time!")
                 .font(.subheadline)
@@ -269,36 +289,56 @@ struct RestaurantDetailView: View {
             Button {
                 saveReview()
             } label: {
-                Text("Save My Review \(MunchkinPet.emoji)")
-                    .fontWeight(.semibold)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(
-                        rating > 0 ? Color.orange : Color.gray
-                    )
-                    .foregroundStyle(.white)
-                    .clipShape(
-                        RoundedRectangle(cornerRadius: 15)
-                    )
+                HStack(spacing: 6) {
+                    Text("Save My Review")
+                    MunchkinAvatarView(size: 18)
+                }
+                .fontWeight(.semibold)
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(
+                    rating > 0 ? Color.orange : Color.gray
+                )
+                .foregroundStyle(.white)
+                .clipShape(
+                    RoundedRectangle(cornerRadius: 15)
+                )
             }
             .disabled(rating == 0)
         }
     }
 
-    // MARK: - Save Feedback
+    // MARK: - Visit progress
 
-    func incrementRestaurantGoal() {
-        let keyGoals = "goals_v1"
+    /// Checking a spot remembers the visit and donates one point to the first
+    /// active food goal. A restaurant can only hold one credit at a time.
+    func recordVisitIfNeeded() {
+        VisitedRestaurants.markVisited(restaurant.id)
 
-        var goals: [GoalItem] = []
-        if let data = UserDefaults.standard.data(forKey: keyGoals),
-           let decoded = try? JSONDecoder().decode([GoalItem].self, from: data) {
-            goals = decoded
-        }
+        guard RestaurantGoalCredits.credit(for: restaurant.id) == nil,
+              let goalID = activeFoodGoalID() else { return }
 
-        guard let idx = goals.firstIndex(where: { g in
-            g.completedAt == nil && GoalKeywords.isFoodRelated(g.title)
-        }) else { return }
+        RestaurantGoalCredits.add(
+            RestaurantGoalCredit(restaurantID: restaurant.id, goalID: goalID)
+        )
+        incrementRestaurantGoal(goalID: goalID)
+    }
+
+    /// Unchecking takes that exact point back, so the bar matches the box.
+    func uncheckVisit() {
+        guard let credit = RestaurantGoalCredits.remove(for: restaurant.id) else { return }
+        decrementRestaurantGoal(goalID: credit.goalID)
+    }
+
+    private func activeFoodGoalID() -> UUID? {
+        loadGoals().first(where: {
+            $0.completedAt == nil && GoalKeywords.isFoodRelated($0.title)
+        })?.id
+    }
+
+    private func incrementRestaurantGoal(goalID: UUID) {
+        var goals = loadGoals()
+        guard let idx = goals.firstIndex(where: { $0.id == goalID }) else { return }
 
         goals[idx].progress += 1
         if goals[idx].progress >= goals[idx].target {
@@ -310,12 +350,40 @@ struct RestaurantDetailView: View {
             goals[idx].rewardClaimed = false
         }
 
-        if let gData = try? JSONEncoder().encode(goals) {
-            UserDefaults.standard.set(gData, forKey: keyGoals)
+        saveGoals(goals)
+    }
+
+    private func decrementRestaurantGoal(goalID: UUID) {
+        var goals = loadGoals()
+        guard let idx = goals.firstIndex(where: { $0.id == goalID }) else { return }
+
+        goals[idx].progress = max(0, goals[idx].progress - 1)
+        if goals[idx].progress < goals[idx].target {
+            // No longer earned: drop the completed flag/checkmark as well, so
+            // the goal goes back to being plainly in progress.
+            goals[idx].completedAt = nil
         }
+
+        saveGoals(goals)
+    }
+
+    private func loadGoals() -> [GoalItem] {
+        guard let data = UserDefaults.standard.data(forKey: "goals_v1"),
+              let goals = try? JSONDecoder().decode([GoalItem].self, from: data)
+        else { return [] }
+        return goals
+    }
+
+    private func saveGoals(_ goals: [GoalItem]) {
+        guard let data = try? JSONEncoder().encode(goals) else { return }
+        UserDefaults.standard.set(data, forKey: "goals_v1")
     }
 
     func saveReview() {
+        // Rating a spot also records that it has been visited, so it can never
+        // be used again for the "try new restaurants" goals.
+        VisitedRestaurants.markVisited(restaurant.id)
+
         let review = RestaurantReviewData(
             restaurantName: restaurant.name,
             rating: rating,

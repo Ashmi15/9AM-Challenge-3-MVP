@@ -424,15 +424,7 @@ struct ShopView: View {
                     .fill(Color.white.opacity(0.55))
                     .frame(width: 200, height: 200)
 
-                Text(MunchkinPet.emoji)
-                    .font(.system(size: 115))
-
-                ForEach(equippedAccessories) { item in
-                    Text(item.emoji)
-                        .font(.system(size: item.previewSize))
-                        .offset(item.previewOffset)
-                        .shadow(color: .black.opacity(0.12), radius: 3, y: 2)
-                }
+                MunchkinAvatarView(size: 115)
             }
             .frame(height: 260)
             .frame(maxWidth: .infinity)
@@ -517,14 +509,8 @@ struct ShopView: View {
     }
 
     private var equipped: [AccessoryCategory: String] {
-        var result: [AccessoryCategory: String] = [:]
-        for pair in equippedRaw.split(separator: ",") {
-            let parts = pair.split(separator: "=")
-            guard parts.count == 2,
-                  let category = AccessoryCategory(rawValue: String(parts[0])) else { continue }
-            result[category] = String(parts[1])
-        }
-        return result
+        // Same decoder the avatar uses everywhere else in the app.
+        MunchkinOutfit.decode(equippedRaw)
     }
 
     private var ownedAccessories: [ShopAccessory] {
@@ -633,6 +619,7 @@ private struct AccessoryDetailSheet: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
+                    .padding(.top, 12)
             }
 
             Spacer(minLength: 0)

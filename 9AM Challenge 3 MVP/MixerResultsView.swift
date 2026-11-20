@@ -48,9 +48,13 @@ struct MixerResultsView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
 
-                Text("Your Munchie Matches! \(MunchkinPet.emoji)")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
+                HStack(spacing: 8) {
+                    Text("Your Munchie Matches!")
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+
+                    MunchkinAvatarView(size: 34)
+                }
 
                 Text("Based on your cravings: \(selectedCravings.joined(separator: ", "))")
                     .font(.subheadline)
@@ -95,8 +99,7 @@ struct MixerResultsView: View {
                                     RoundedRectangle(cornerRadius: 15)
                                 )
 
-                            Text(MunchkinPet.emoji)
-                                .font(.system(size: 40))
+                            MunchkinAvatarView(size: 40)
                         }
                     }
                     .padding(12)

@@ -30,6 +30,42 @@ enum GoalReward {
     }
 }
 
+/// Shared by the Goals tab and the Home screen so a reward can only ever be
+/// paid out once, no matter where it is claimed.
+enum GoalClaim {
+    static func claim(_ id: UUID) {
+        let defaults = UserDefaults.standard
+        guard let data = defaults.data(forKey: "goals_v1"),
+              var goals = try? JSONDecoder().decode([GoalItem].self, from: data),
+              let index = goals.firstIndex(where: { $0.id == id }),
+              goals[index].completedAt != nil,
+              goals[index].rewardClaimed != true else { return }
+
+        let reward = GoalReward.coins(for: goals[index].difficulty)
+        var history = defaults.data(forKey: "goal_history_v1")
+            .flatMap { try? JSONDecoder().decode([CompletedGoalRecord].self, from: $0) } ?? []
+
+        history.append(CompletedGoalRecord(
+            title: goals[index].title,
+            difficulty: goals[index].difficulty,
+            reward: reward,
+            completedAt: goals[index].completedAt ?? Date()
+        ))
+        goals[index].rewardClaimed = true
+
+        if let goalData = try? JSONEncoder().encode(goals) {
+            defaults.set(goalData, forKey: "goals_v1")
+        }
+        if let historyData = try? JSONEncoder().encode(history) {
+            defaults.set(historyData, forKey: "goal_history_v1")
+        }
+        defaults.set(
+            defaults.integer(forKey: "goal_currency_v1") + reward,
+            forKey: "goal_currency_v1"
+        )
+    }
+}
+
 // MARK: - Data repairs
 
 /// One-time fixes for goal data written by older builds.
@@ -95,7 +131,6 @@ struct GoalsView: View {
 
     @State private var showAdd = false
     @State private var clearPrompt: ClearPrompt?
-    @State private var goalPendingDeletion: GoalItem?
     @State private var newTitle = ""
     @State private var newTarget = 1
 
@@ -289,26 +324,6 @@ struct GoalsView: View {
                     }
                 )
             }
-            .alert(
-                "Delete \(goalPendingDeletion?.title ?? "goal")?",
-                isPresented: Binding(
-                    get: { goalPendingDeletion != nil },
-                    set: { if !$0 { goalPendingDeletion = nil } }
-                ),
-                presenting: goalPendingDeletion
-            ) { goal in
-                Button("Delete", role: .destructive) {
-                    deleteGoal(goal.id)
-                    goalPendingDeletion = nil
-                }
-                Button("Cancel", role: .cancel) { }
-            } message: { goal in
-                if goal.completedAt != nil && goal.rewardClaimed != true {
-                    Text("This goal is completed and still has coins to claim. Deleting it forfeits the reward.")
-                } else {
-                    Text("This removes the goal from your list.")
-                }
-            }
             .sheet(isPresented: $showAdd) {
                 NavigationStack {
                     Form {
@@ -368,18 +383,6 @@ struct GoalsView: View {
                 Text(g.difficulty)
                     .font(.caption)
                     .foregroundStyle(.orange)
-
-                Button {
-                    goalPendingDeletion = g
-                } label: {
-                    Image(systemName: "trash")
-                        .font(.caption)
-                        .foregroundStyle(.red)
-                        .padding(4)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Delete \(g.title)")
             }
 
             ProgressView(value: Double(g.progress), total: Double(max(g.target, 1)))
@@ -437,19 +440,8 @@ struct GoalsView: View {
     }
 
     func claimReward(_ id: UUID) {
-        guard let index = goals.firstIndex(where: { $0.id == id }) else { return }
-        guard goals[index].completedAt != nil, goals[index].rewardClaimed != true else { return }
-
-        let reward = GoalReward.coins(for: goals[index].difficulty)
-        currency += reward
-        history.append(CompletedGoalRecord(
-            title: goals[index].title,
-            difficulty: goals[index].difficulty,
-            reward: reward,
-            completedAt: goals[index].completedAt ?? Date()
-        ))
-        goals[index].rewardClaimed = true
-        save()
+        GoalClaim.claim(id)
+        load()
     }
 
     func load() {

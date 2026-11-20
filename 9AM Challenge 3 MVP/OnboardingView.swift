@@ -151,9 +151,8 @@ struct OnboardingView: View {
 
     private var welcomePage: some View {
         VStack(spacing: 20) {
-            Text(MunchkinPet.emoji)
-                .font(.system(size: 90))
-                .frame(width: 150, height: 150)
+            MunchkinAvatarView(size: 90)
+                .frame(width: 170, height: 170)
                 .background(Color.orange.opacity(0.15))
                 .clipShape(Circle())
 
@@ -300,9 +299,8 @@ struct OnboardingView: View {
                 .multilineTextAlignment(.center)
 
             VStack(spacing: 14) {
-                Text(recommendation.persona.emoji)
-                    .font(.system(size: 88))
-                    .frame(width: 150, height: 150)
+                MunchkinAvatarView(persona: recommendation.persona, size: 88)
+                    .frame(width: 170, height: 170)
                     .background(recommendation.persona.accent)
                     .clipShape(Circle())
 
@@ -394,8 +392,7 @@ struct OnboardingView: View {
                             .background(Color.mint.opacity(0.2))
                             .clipShape(RoundedRectangle(cornerRadius: 14))
 
-                        Text(MunchkinPet.emoji)
-                            .font(.system(size: 32))
+                        MunchkinAvatarView(size: 32)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }

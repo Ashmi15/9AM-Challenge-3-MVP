@@ -16,7 +16,8 @@ enum FoodPersona: String, CaseIterable, Identifiable {
     case munchkin = "Munchkin"
     case cookie = "Cookie"
     case fiery = "Fiery"
-    case leo = "Leo"
+    // Legacy raw value is kept so personas saved by older builds still load.
+    case panda = "Leo"
     case terry = "Terry"
 
     var id: String { rawValue }
@@ -26,7 +27,7 @@ enum FoodPersona: String, CaseIterable, Identifiable {
         case .munchkin: return "🐱"
         case .cookie: return "🐶"
         case .fiery: return "🦊"
-        case .leo: return "🦁"
+        case .panda: return "🐼"
         case .terry: return "🐯"
         }
     }
@@ -36,7 +37,7 @@ enum FoodPersona: String, CaseIterable, Identifiable {
         case .munchkin: return "Munchkin, the Cat"
         case .cookie: return "Cookie, the Puppy"
         case .fiery: return "Fiery, the Fox"
-        case .leo: return "Leo, the Lion"
+        case .panda: return "Pam, the Panda"
         case .terry: return "Terry, the Tiger"
         }
     }
@@ -49,8 +50,8 @@ enum FoodPersona: String, CaseIterable, Identifiable {
             return "Like Cookie the puppy, lying on the couch while eating a tub of ice cream from Yo-Chi is your thing!"
         case .fiery:
             return "Spicy delicacies make your mouth water — you live for that fiery, burning sensation!"
-        case .leo:
-            return "Like Leo the Lion, you love indulging in a nice tangy, juicy treat!"
+        case .panda:
+            return "Like Pam the Panda, you love indulging in a nice tangy, juicy treat!"
         case .terry:
             return "Like Terry the Tiger, you love the taste of a nice savoury treat after a long day of work."
         }
@@ -61,7 +62,7 @@ enum FoodPersona: String, CaseIterable, Identifiable {
         case .munchkin: return "a little bit of everything"
         case .cookie: return "sweet things"
         case .fiery: return "spicy things"
-        case .leo: return "tangy things"
+        case .panda: return "tangy things"
         case .terry: return "savoury things"
         }
     }
@@ -71,7 +72,7 @@ enum FoodPersona: String, CaseIterable, Identifiable {
         case .munchkin: return Color(red: 0.95, green: 0.75, blue: 0.73)
         case .cookie: return Color(red: 1.0, green: 0.90, blue: 0.72)
         case .fiery: return Color(red: 1.0, green: 0.79, blue: 0.68)
-        case .leo: return Color(red: 1.0, green: 0.93, blue: 0.70)
+        case .panda: return Color(red: 1.0, green: 0.93, blue: 0.70)
         case .terry: return Color(red: 0.82, green: 0.88, blue: 0.99)
         }
     }
@@ -81,7 +82,7 @@ enum FoodPersona: String, CaseIterable, Identifiable {
         switch flavour.lowercased() {
         case "spicy": return .fiery
         case "sweet": return .cookie
-        case "tangy": return .leo
+        case "tangy": return .panda
         case "savoury", "salty": return .terry
         default: return nil
         }
@@ -128,6 +129,11 @@ enum FoodPersonaStore {
     }
 
     static func setPreferredPersona(_ persona: FoodPersona?, reason: String? = nil) {
+        // The pet is decided by food preferences only. Once the user has left
+        // ratings, those reviews are the sole source of truth and the starting
+        // pet can no longer be swapped (e.g. by replaying the tutorial).
+        guard ReviewHistory.all().isEmpty else { return }
+
         let defaults = UserDefaults.standard
         if let persona {
             defaults.set(persona.rawValue, forKey: Key.preferred)
@@ -266,7 +272,7 @@ enum FoodPersonaStore {
                 if let persona = FoodPersona.from(flavour: cleaned) {
                     liked.insert(persona)
                 } else if cleaned.contains("fresh") {
-                    liked.insert(.leo)
+                    liked.insert(.panda)
                 }
             }
 
@@ -312,7 +318,7 @@ enum FoodPersonaStore {
             "spicy", "chilli", "chili", "fiery", "mala", "sambal", "curry",
             "pepper", "spice", "hot and sour", "burn"
         ],
-        .leo: [
+        .panda: [
             "tangy", "sour", "citrus", "lemon", "lime", "tamarind", "pickle",
             "zingy", "acidic", "refreshing"
         ],

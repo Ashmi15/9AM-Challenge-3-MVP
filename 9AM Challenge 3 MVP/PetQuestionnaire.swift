@@ -18,7 +18,7 @@ enum PetQuestionnaire {
     static let flavours: [Option] = [
         Option(id: "spicy", emoji: "🌶️", label: "Spicy", persona: .fiery),
         Option(id: "sweet", emoji: "🍰", label: "Sweet", persona: .cookie),
-        Option(id: "tangy", emoji: "🍋", label: "Tangy", persona: .leo),
+        Option(id: "tangy", emoji: "🍋", label: "Tangy", persona: .panda),
         Option(id: "savoury", emoji: "🍜", label: "Savoury", persona: .terry),
         Option(id: "everything", emoji: "🐱", label: "A bit of everything", persona: .munchkin)
     ]
@@ -26,7 +26,7 @@ enum PetQuestionnaire {
     static let treats: [Option] = [
         Option(id: "ice-cream", emoji: "🍦", label: "Ice cream & cake", persona: .cookie),
         Option(id: "fiery-noodles", emoji: "🍜", label: "Fiery noodles", persona: .fiery),
-        Option(id: "citrus", emoji: "🍋", label: "Citrus & tamarind", persona: .leo),
+        Option(id: "citrus", emoji: "🍋", label: "Citrus & tamarind", persona: .panda),
         Option(id: "roast", emoji: "🍗", label: "A hearty roast", persona: .terry),
         Option(id: "surprise", emoji: "🎲", label: "Surprise me", persona: .munchkin)
     ]

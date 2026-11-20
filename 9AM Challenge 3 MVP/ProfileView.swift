@@ -78,12 +78,13 @@ struct ProfileView: View {
                     Text("Your food adventure, your rules!")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
 
                     // MARK: Food Persona (changes with your reviews)
                     HStack(spacing: 15) {
-                        Text(personaSnapshot.persona.emoji)
-                            .font(.system(size: 65))
-                            .frame(width: 95, height: 95)
+                        MunchkinAvatarView(persona: personaSnapshot.persona, size: 65)
+                            .frame(width: 120, height: 120)
                             .background(personaSnapshot.persona.accent)
                             .clipShape(Circle())
 
@@ -125,8 +126,7 @@ struct ProfileView: View {
                             .font(.headline)
 
                         HStack(spacing: 12) {
-                            Text(personaSnapshot.persona.emoji)
-                                .font(.system(size: 38))
+                            MunchkinAvatarView(persona: personaSnapshot.persona, size: 38)
 
                             VStack(alignment: .leading, spacing: 3) {
                                 Text(personaSnapshot.persona.name)
@@ -268,8 +268,7 @@ struct ProfileView: View {
                                     .background(Color.mint.opacity(0.2))
                                     .clipShape(RoundedRectangle(cornerRadius: 14))
 
-                                Text(MunchkinPet.emoji)
-                                    .font(.system(size: 32))
+                                MunchkinAvatarView(persona: personaSnapshot.persona, size: 32)
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
                         }
@@ -284,8 +283,7 @@ struct ProfileView: View {
 
                     // MARK: Mascot Message
                     HStack(spacing: 12) {
-                        Text(MunchkinPet.emoji)
-                            .font(.system(size: 40))
+                        MunchkinAvatarView(persona: personaSnapshot.persona, size: 40)
 
                         Text("The better I know your tastes, the yummier your recommendations!")
                             .font(.subheadline)

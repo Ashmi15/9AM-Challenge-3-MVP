@@ -122,7 +122,10 @@ struct DietaryPreferences {
         guard !isEmpty else {
             return "Pick a dietary restriction and I'll push the spots that fit it to the top!"
         }
-        return "I'll only recommend spots that match all \(active.count) of your dietary needs — no maybes!"
+        let needs = active.count == 1
+            ? "all of your dietary needs"
+            : "all \(active.count) of your dietary needs"
+        return "I'll only recommend spots that match \(needs) — no maybes!"
     }
 }
 
@@ -141,7 +144,10 @@ struct DietAdherence {
             return "No dietary restrictions set — Munchkin says every spot is fair game!"
         }
         if adheresToAll {
-            return "Munchkin checked what we know: this spot matches all \(total) of your dietary needs! ✅"
+            let needs = total == 1
+                ? "all of your dietary needs"
+                : "all \(total) of your dietary needs"
+            return "Munchkin checked what we know: this spot matches \(needs)! ✅"
         }
 
         let confirmed = matched.map(\.label)
@@ -270,8 +276,7 @@ struct MunchkinDietMessage: View {
                 .clipShape(RoundedRectangle(cornerRadius: 14))
 
             if showMascot {
-                Text(MunchkinPet.emoji)
-                    .font(.system(size: 32))
+                MunchkinAvatarView(size: 32)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
