@@ -32,12 +32,10 @@ struct ProfileView: View {
     @AppStorage("dietDairyFree")
     private var dairyFree = false
 
-    @AppStorage("preferredPersona") private var preferredPersona = ""
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = true
     @AppStorage("goal_currency_v1") private var coins = 0
 
     @State private var personaSnapshot = FoodPersonaStore.resolve()
-    @State private var showPetPicker = false
 
     private var diet: DietaryPreferences {
         DietaryPreferences(
@@ -131,14 +129,10 @@ struct ProfileView: View {
                                 .font(.system(size: 38))
 
                             VStack(alignment: .leading, spacing: 3) {
-                                Text(preferredPersona.isEmpty
-                                     ? "Matching my reviews"
-                                     : personaSnapshot.persona.name)
+                                Text(personaSnapshot.persona.name)
                                     .font(.subheadline.weight(.semibold))
 
-                                Text(preferredPersona.isEmpty
-                                     ? "My ratings and reviews pick the pet."
-                                     : "Starting pet for now — my reviews take over next.")
+                                Text("Changes automatically as I rate places.")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             }
@@ -147,18 +141,6 @@ struct ProfileView: View {
                         }
 
                         HStack(spacing: 10) {
-                            Button {
-                                showPetPicker = true
-                            } label: {
-                                Label("Change my pet", systemImage: "pawprint.fill")
-                                    .font(.caption.weight(.semibold))
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 8)
-                                    .background(Color.orange.opacity(0.15))
-                                    .clipShape(Capsule())
-                            }
-                            .buttonStyle(.plain)
-
                             Button {
                                 hasCompletedOnboarding = false
                             } label: {
@@ -323,21 +305,8 @@ struct ProfileView: View {
             }
             .background(backgroundColor)
             .onAppear { personaSnapshot = FoodPersonaStore.resolve() }
-            .onChange(of: preferredPersona) { _, _ in
-                personaSnapshot = FoodPersonaStore.resolve(force: true)
-            }
             .navigationTitle("My Munchkin Profile")
             .navigationBarTitleDisplayMode(.large)
-            .sheet(isPresented: $showPetPicker) {
-                NavigationStack {
-                    PetPickerView(selection: $preferredPersona)
-                        .navigationTitle("Choose your Munchkin")
-                        .toolbar {
-                            Button("Done") { showPetPicker = false }
-                        }
-                }
-                .presentationDetents([.medium, .large])
-            }
         }
     }
 }

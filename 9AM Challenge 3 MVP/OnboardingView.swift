@@ -17,12 +17,10 @@ struct OnboardingView: View {
     @AppStorage("dietHalal") private var halal = false
     @AppStorage("dietGlutenFree") private var glutenFree = false
     @AppStorage("dietDairyFree") private var dairyFree = false
-    @AppStorage("preferredPersona") private var selectedPet = ""
 
     @State private var step: Step = .welcome
     @State private var selectedFlavours: Set<String> = []
     @State private var selectedTreat: String?
-    @State private var showPetPicker = false
 
     private enum Step: Int, CaseIterable {
         case welcome
@@ -133,7 +131,6 @@ struct OnboardingView: View {
 
     private func applyRecommendation() {
         let result = recommendation
-        selectedPet = result.persona.rawValue
         FoodPersonaStore.setPreferredPersona(result.persona, reason: result.explanation)
     }
 
@@ -226,7 +223,7 @@ struct OnboardingView: View {
                 tutorialRow(
                     "person.crop.circle.fill",
                     "Profile",
-                    "Change your pet and preferences, or open the Munchkin Shop."
+                    "See which pet matches your reviews, change preferences, or open the Munchkin Shop."
                 )
             }
             .padding(20)
@@ -342,21 +339,8 @@ struct OnboardingView: View {
             .buttonStyle(.borderedProminent)
             .tint(.orange)
 
-            Button("Pick a different pet") { showPetPicker = true }
-                .font(.subheadline)
-                .foregroundStyle(.teal)
         }
         .frame(maxWidth: .infinity)
-        .sheet(isPresented: $showPetPicker) {
-            NavigationStack {
-                PetPickerView(selection: $selectedPet)
-                    .navigationTitle("Choose your Munchkin")
-                    .toolbar {
-                        Button("Done") { showPetPicker = false }
-                    }
-            }
-            .presentationDetents([.medium, .large])
-        }
     }
 
     private var preferencesPage: some View {

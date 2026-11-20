@@ -120,8 +120,8 @@ enum FoodPersonaStore {
         static let reason = "persona_recommendation_reason"
     }
 
-    /// A pet picked in onboarding or Profile is only a starting point. It is
-    /// shown until the next review is saved, then the user's feedback decides.
+    /// The pet chosen by onboarding is only a starting point. It is shown
+    /// until the next review is saved, then the user's feedback decides.
     static func preferredPersona() -> FoodPersona? {
         UserDefaults.standard.string(forKey: Key.preferred)
             .flatMap { FoodPersona(rawValue: $0) }
@@ -166,8 +166,8 @@ enum FoodPersonaStore {
         let savedPersona = defaults.string(forKey: Key.persona)
             .flatMap { FoodPersona(rawValue: $0) }
 
-        // A pet picked in onboarding or Profile is a starting point. It stays
-        // until the user saves a review, then their feedback takes over.
+        // The onboarding pet is a starting point. It stays until the user
+        // saves a review, then their feedback takes over automatically.
         let overridePersona = preferredPersona()
         let overrideIsCurrent =
             overridePersona != nil
