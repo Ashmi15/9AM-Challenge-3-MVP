@@ -11,6 +11,7 @@ struct HomeView: View {
     @State private var activeGoals: [GoalItem] = []
     @State private var completedGoalsAwaitingClaim = 0
     @State private var currency = 0
+    @State private var personaSnapshot = FoodPersonaStore.resolve()
 
     var body: some View {
         NavigationStack {
@@ -24,30 +25,42 @@ struct HomeView: View {
                         .frame(width: 375, alignment: .leading)
 
                     VStack(alignment: .leading, spacing: 15) {
-                        Text("Your Current Food Persona")
-                            .font(.headline)
+                        HStack {
+                            Text("Your Food Persona")
+                                .font(.headline)
+
+                            Spacer()
+
+                            Text("\(personaSnapshot.reviewCount) \(personaSnapshot.reviewCount == 1 ? "rating" : "ratings")")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
 
                         HStack(spacing: 15) {
-                            Text("🐶")
+                            Text(personaSnapshot.persona.emoji)
                                 .font(.system(size: 65))
 
                             VStack(alignment: .leading, spacing: 6) {
-                                Text("The Comfort Foodie")
+                                Text(personaSnapshot.persona.name)
                                     .font(.title3)
                                     .fontWeight(.bold)
 
-                                Text("Like Cookie the puppy, lying on the couch while eating a tub of ice cream from Yo-Chi is your thing!")
+                                Text(personaSnapshot.persona.tagline)
                                     .font(.subheadline)
                                     .foregroundStyle(.secondary)
-                                    .bold()
+
+                                Text(personaSnapshot.explanation)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                    .italic()
                             }
 
                             Spacer()
                         }
                     }
                     .padding(20)
-                    .frame(width: 375, height: 205)
-                    .background(Color(red: 0.95, green: 0.75, blue: 0.73))
+                    .frame(width: 375)
+                    .background(personaSnapshot.persona.accent)
                     .clipShape(RoundedRectangle(cornerRadius: 20))
 
                     VStack(alignment: .leading, spacing: 8) {
@@ -97,9 +110,12 @@ struct HomeView: View {
                         .padding(20)
                         .background(Color(red: 1.0, green: 0.93, blue: 0.79))
                         .clipShape(RoundedRectangle(cornerRadius: 20))
-                        .frame(width: 375, height: 305)
+                        .frame(width: 375)
                 }
-                .onAppear(perform: loadGoals)
+                .onAppear {
+                    loadGoals()
+                    personaSnapshot = FoodPersonaStore.resolve()
+                }
             }
             .navigationTitle("Hello Munchkin!")
             .navigationBarTitleDisplayMode(.large)

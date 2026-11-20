@@ -32,6 +32,23 @@ struct ProfileView: View {
     @AppStorage("dietDairyFree")
     private var dairyFree = false
 
+    @AppStorage("preferredPersona") private var preferredPersona = ""
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = true
+    @AppStorage("goal_currency_v1") private var coins = 0
+
+    @State private var personaSnapshot = FoodPersonaStore.resolve()
+    @State private var showPetPicker = false
+
+    private var diet: DietaryPreferences {
+        DietaryPreferences(
+            vegetarian: vegetarian,
+            vegan: vegan,
+            halal: halal,
+            glutenFree: glutenFree,
+            dairyFree: dairyFree
+        )
+    }
+
     private let locations = [
         "Anywhere",
         "North",
@@ -64,34 +81,136 @@ struct ProfileView: View {
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
 
-                    // MARK: Food Persona
+                    // MARK: Food Persona (changes with your reviews)
                     HStack(spacing: 15) {
-                        Text("🐱")
+                        Text(personaSnapshot.persona.emoji)
                             .font(.system(size: 65))
                             .frame(width: 95, height: 95)
-                            .background(Color.mint.opacity(0.2))
+                            .background(personaSnapshot.persona.accent)
                             .clipShape(Circle())
 
                         VStack(alignment: .leading, spacing: 6) {
-                            Text("My Food Persona")
-                                .font(.headline)
+                            HStack {
+                                Text("My Food Persona")
+                                    .font(.headline)
 
-                            Text("The Spice Explorer 🌶️")
+                                Spacer()
+
+                                Text("\(personaSnapshot.reviewCount) \(personaSnapshot.reviewCount == 1 ? "rating" : "ratings")")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+
+                            Text(personaSnapshot.persona.name)
                                 .font(.title3)
                                 .fontWeight(.bold)
 
-                            Text("Bold, adventurous and always hungry!")
+                            Text(personaSnapshot.persona.tagline)
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
-                        }
 
-                        Spacer()
+                            Text(personaSnapshot.explanation)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .italic()
+                        }
                     }
                     .padding(20)
                     .background(.white)
                     .clipShape(
                         RoundedRectangle(cornerRadius: 20)
                     )
+
+                    // MARK: Pet + tutorial controls
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Your Munchkin")
+                            .font(.headline)
+
+                        HStack(spacing: 12) {
+                            Text(personaSnapshot.persona.emoji)
+                                .font(.system(size: 38))
+
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(preferredPersona.isEmpty
+                                     ? "Matching my reviews"
+                                     : personaSnapshot.persona.name)
+                                    .font(.subheadline.weight(.semibold))
+
+                                Text(preferredPersona.isEmpty
+                                     ? "My ratings and reviews pick the pet."
+                                     : "Starting pet for now — my reviews take over next.")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+
+                            Spacer()
+                        }
+
+                        HStack(spacing: 10) {
+                            Button {
+                                showPetPicker = true
+                            } label: {
+                                Label("Change my pet", systemImage: "pawprint.fill")
+                                    .font(.caption.weight(.semibold))
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 8)
+                                    .background(Color.orange.opacity(0.15))
+                                    .clipShape(Capsule())
+                            }
+                            .buttonStyle(.plain)
+
+                            Button {
+                                hasCompletedOnboarding = false
+                            } label: {
+                                Label("Replay tutorial", systemImage: "book.fill")
+                                    .font(.caption.weight(.semibold))
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 8)
+                                    .background(Color.teal.opacity(0.15))
+                                    .clipShape(Capsule())
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(20)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 20))
+
+                    // MARK: Shop (moved here from its own tab)
+                    NavigationLink {
+                        ShopView()
+                    } label: {
+                        HStack(spacing: 14) {
+                            Image(systemName: "bag.fill")
+                                .font(.title2)
+                                .foregroundStyle(.orange)
+                                .frame(width: 38)
+
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text("Munchkin Shop")
+                                    .font(.headline)
+
+                                Text("Dress up your pet with the coins you earn.")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+
+                            Spacer()
+
+                            Text("💰 \(coins)")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(.orange)
+
+                            Image(systemName: "chevron.right")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(20)
+                        .background(.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 20))
+                    }
+                    .buttonStyle(.plain)
 
                     // MARK: Preferences
                     VStack(alignment: .leading, spacing: 20) {
@@ -159,6 +278,18 @@ struct ProfileView: View {
                             Toggle("Halal-friendly", isOn: $halal)
                             Toggle("Gluten-free", isOn: $glutenFree)
                             Toggle("Dairy-free", isOn: $dairyFree)
+
+                            HStack(alignment: .bottom, spacing: 8) {
+                                Text(diet.summaryMessage)
+                                    .font(.caption)
+                                    .padding(10)
+                                    .background(Color.mint.opacity(0.2))
+                                    .clipShape(RoundedRectangle(cornerRadius: 14))
+
+                                Text(MunchkinPet.emoji)
+                                    .font(.system(size: 32))
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
                         }
                         .tint(.teal)
 
@@ -171,7 +302,7 @@ struct ProfileView: View {
 
                     // MARK: Mascot Message
                     HStack(spacing: 12) {
-                        Text("🐱")
+                        Text(MunchkinPet.emoji)
                             .font(.system(size: 40))
 
                         Text("The better I know your tastes, the yummier your recommendations!")
@@ -191,8 +322,22 @@ struct ProfileView: View {
                 .padding(20)
             }
             .background(backgroundColor)
+            .onAppear { personaSnapshot = FoodPersonaStore.resolve() }
+            .onChange(of: preferredPersona) { _, _ in
+                personaSnapshot = FoodPersonaStore.resolve(force: true)
+            }
             .navigationTitle("My Munchkin Profile")
             .navigationBarTitleDisplayMode(.large)
+            .sheet(isPresented: $showPetPicker) {
+                NavigationStack {
+                    PetPickerView(selection: $preferredPersona)
+                        .navigationTitle("Choose your Munchkin")
+                        .toolbar {
+                            Button("Done") { showPetPicker = false }
+                        }
+                }
+                .presentationDetents([.medium, .large])
+            }
         }
     }
 }

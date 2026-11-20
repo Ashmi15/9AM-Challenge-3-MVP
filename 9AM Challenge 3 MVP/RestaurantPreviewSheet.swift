@@ -12,6 +12,7 @@ struct RestaurantPreviewSheet: View {
 
     let restaurant: Restaurant
     let reason: String
+    var adherence: DietAdherence?
 
     @Environment(\.dismiss) private var dismiss
 
@@ -53,13 +54,22 @@ struct RestaurantPreviewSheet: View {
 
             // Mascot explanation in bottom-right
             HStack(alignment: .bottom, spacing: 10) {
-                Text(reason)
-                    .font(.subheadline)
-                    .padding(12)
-                    .background(Color.orange.opacity(0.15))
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(reason)
+                        .font(.subheadline)
+                        .padding(12)
+                        .background(Color.orange.opacity(0.15))
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
 
-                Text("🐱")
+                    if let adherence {
+                        MunchkinDietMessage(
+                            adherence: adherence,
+                            showMascot: false
+                        )
+                    }
+                }
+
+                Text(MunchkinPet.emoji)
                     .font(.system(size: 45))
             }
 

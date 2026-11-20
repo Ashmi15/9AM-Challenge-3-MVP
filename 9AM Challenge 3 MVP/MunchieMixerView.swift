@@ -43,7 +43,7 @@ struct MunchieMixerView: View {
 
                     // MARK: Mascot
                     HStack(spacing: 15) {
-                        Text("🐱")
+                        Text(MunchkinPet.emoji)
                             .font(.system(size: 70))
 
                         Text("What would you like to eat today?")

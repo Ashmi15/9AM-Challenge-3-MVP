@@ -277,14 +277,25 @@ enum RestaurantDirectory {
         return all.filter { $0.region == region }
     }
 
-    /// Best matches for the flavours selected in the Munchie Mixer.
+    /// Best matches for the flavours selected in the Munchie Mixer. When
+    /// dietary preferences are supplied, every restaurant in the region is
+    /// checked and only fully matching spots can be recommended.
     static func recommendations(
         for cravings: [String],
-        region: RestaurantRegion = .anywhere
+        region: RestaurantRegion = .anywhere,
+        maximumResults: Int = 3,
+        matching preferences: DietaryPreferences? = nil
     ) -> [Restaurant] {
         guard !cravings.isEmpty else { return [] }
 
-        let ranked = restaurants(in: region)
+        var candidates = restaurants(in: region)
+        if let preferences, !preferences.isEmpty {
+            candidates = candidates.filter {
+                $0.dietAdherence(for: preferences).adheresToAll
+            }
+        }
+
+        let ranked = candidates
             .map { restaurant in
                 (restaurant: restaurant, matches: restaurant.matchingCravings(cravings).count)
             }
@@ -304,12 +315,12 @@ enum RestaurantDirectory {
                 return lhs.restaurant.name.localizedCaseInsensitiveCompare(rhs.restaurant.name) == .orderedAscending
             }
 
-        // Prefer a varied set of cuisines over three near-identical results.
+        // Prefer a varied set of cuisines over near-identical results.
         var picks: [Restaurant] = []
         var usedIDs = Set<String>()
         var usedCuisines = Set<String>()
 
-        for match in ranked where picks.count < 3 {
+        for match in ranked where picks.count < maximumResults {
             let cuisine = match.restaurant.cuisine.lowercased()
             guard !usedCuisines.contains(cuisine) else { continue }
             picks.append(match.restaurant)
@@ -317,8 +328,8 @@ enum RestaurantDirectory {
             usedCuisines.insert(cuisine)
         }
 
-        if picks.count < 3 {
-            for match in ranked where picks.count < 3 {
+        if picks.count < maximumResults {
+            for match in ranked where picks.count < maximumResults {
                 guard !usedIDs.contains(match.restaurant.id) else { continue }
                 picks.append(match.restaurant)
                 usedIDs.insert(match.restaurant.id)

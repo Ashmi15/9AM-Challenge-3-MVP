@@ -11,12 +11,29 @@ struct WeeklyRecommendationsSection: View {
     @AppStorage("preferredLocation")
     private var preferredLocation = "Anywhere"
 
+    @AppStorage("dietVegetarian") private var vegetarian = false
+    @AppStorage("dietVegan") private var vegan = false
+    @AppStorage("dietHalal") private var halal = false
+    @AppStorage("dietGlutenFree") private var glutenFree = false
+    @AppStorage("dietDairyFree") private var dairyFree = false
+
     private var region: RestaurantRegion {
         RestaurantRegion.from(preference: preferredLocation)
     }
 
+    private var diet: DietaryPreferences {
+        DietaryPreferences(
+            vegetarian: vegetarian,
+            vegan: vegan,
+            halal: halal,
+            glutenFree: glutenFree,
+            dairyFree: dairyFree
+        )
+    }
+
     private var restaurants: [Restaurant] {
-        Array(RestaurantDirectory.weeklyPicks(for: region).prefix(3))
+        let picks = RestaurantDirectory.dietAwareWeeklyPicks(for: region, using: diet)
+        return Array(picks.prefix(3))
     }
 
     var body: some View {
@@ -71,7 +88,9 @@ struct WeeklyRecommendationsSection: View {
             }
 
             if restaurants.isEmpty {
-                Text("No picks in this region yet. Try another region.")
+                Text(diet.isEmpty
+                     ? "No picks in this region yet. Try another region."
+                     : "No spots here match all your dietary needs. Try another region or relax a restriction.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, minHeight: 60)

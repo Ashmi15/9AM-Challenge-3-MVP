@@ -199,64 +199,62 @@ struct ShopView: View {
     ]
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: 18) {
-                    subtitle
+        ScrollView {
+            VStack(spacing: 18) {
+                subtitle
 
-                    Picker("Shop section", selection: $tab) {
-                        ForEach(ShopTab.allCases) { shopTab in
-                            Text(shopTab.title).tag(shopTab)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .tint(.orange)
-
-                    if tab == .buy {
-                        buySection
-                    } else {
-                        munchkinSection
+                Picker("Shop section", selection: $tab) {
+                    ForEach(ShopTab.allCases) { shopTab in
+                        Text(shopTab.title).tag(shopTab)
                     }
                 }
-                .padding(20)
-            }
-            .background(backgroundColor)
-            .navigationTitle("Munchkin Shop")
-            .navigationBarTitleDisplayMode(.large)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Text("💰 \(coins)")
-                        .font(.headline)
-                        .foregroundStyle(.orange)
+                .pickerStyle(.segmented)
+                .tint(.orange)
+
+                if tab == .buy {
+                    buySection
+                } else {
+                    munchkinSection
                 }
             }
-            .sheet(item: $selectedItem) { item in
-                AccessoryDetailSheet(
-                    item: item,
-                    coins: coins,
-                    owned: ownedIDs.contains(item.id),
-                    wearing: equipped[item.category] == item.id,
-                    unlocked: isUnlocked(item),
-                    onBuy: { buy(item) },
-                    onToggleWear: { toggleEquip(item) },
-                    onSell: { sell(item) }
-                )
+            .padding(20)
+        }
+        .background(backgroundColor)
+        .navigationTitle("Munchkin Shop")
+        .navigationBarTitleDisplayMode(.large)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Text("💰 \(coins)")
+                    .font(.headline)
+                    .foregroundStyle(.orange)
             }
-            .alert(
-                "Sell \(saleCandidate?.name ?? "accessory")?",
-                isPresented: Binding(
-                    get: { saleCandidate != nil },
-                    set: { if !$0 { saleCandidate = nil } }
-                ),
-                presenting: saleCandidate
-            ) { item in
-                Button("Sell for 💰 \(item.sellValue)", role: .destructive) {
-                    sell(item)
-                }
-                Button("Cancel", role: .cancel) { }
-            } message: { item in
-                Text("You'll get 💰 \(item.sellValue) back. You can buy it again later.")
+        }
+        .sheet(item: $selectedItem) { item in
+            AccessoryDetailSheet(
+                item: item,
+                coins: coins,
+                owned: ownedIDs.contains(item.id),
+                wearing: equipped[item.category] == item.id,
+                unlocked: isUnlocked(item),
+                onBuy: { buy(item) },
+                onToggleWear: { toggleEquip(item) },
+                onSell: { sell(item) }
+            )
+        }
+        .alert(
+            "Sell \(saleCandidate?.name ?? "accessory")?",
+            isPresented: Binding(
+                get: { saleCandidate != nil },
+                set: { if !$0 { saleCandidate = nil } }
+            ),
+            presenting: saleCandidate
+        ) { item in
+            Button("Sell for 💰 \(item.sellValue)", role: .destructive) {
+                sell(item)
             }
+            Button("Cancel", role: .cancel) { }
+        } message: { item in
+            Text("You'll get 💰 \(item.sellValue) back. You can buy it again later.")
         }
     }
 
@@ -426,7 +424,7 @@ struct ShopView: View {
                     .fill(Color.white.opacity(0.55))
                     .frame(width: 200, height: 200)
 
-                Text("🐱")
+                Text(MunchkinPet.emoji)
                     .font(.system(size: 115))
 
                 ForEach(equippedAccessories) { item in
@@ -720,5 +718,7 @@ private struct AccessoryDetailSheet: View {
 }
 
 #Preview {
-    ShopView()
+    NavigationStack {
+        ShopView()
+    }
 }

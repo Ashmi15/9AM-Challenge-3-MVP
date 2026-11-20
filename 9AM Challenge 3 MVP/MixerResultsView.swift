@@ -15,15 +15,32 @@ struct MixerResultsView: View {
     @AppStorage("preferredLocation")
     private var preferredLocation = "Anywhere"
 
+    @AppStorage("dietVegetarian") private var vegetarian = false
+    @AppStorage("dietVegan") private var vegan = false
+    @AppStorage("dietHalal") private var halal = false
+    @AppStorage("dietGlutenFree") private var glutenFree = false
+    @AppStorage("dietDairyFree") private var dairyFree = false
+
     private var region: RestaurantRegion {
         RestaurantRegion.from(preference: preferredLocation)
     }
 
-    // Restaurants matching the selected cravings in the chosen region
+    private var diet: DietaryPreferences {
+        DietaryPreferences(
+            vegetarian: vegetarian,
+            vegan: vegan,
+            halal: halal,
+            glutenFree: glutenFree,
+            dairyFree: dairyFree
+        )
+    }
+
+    // Searches every restaurant in the region and keeps only fully compliant ones.
     private var matchedRestaurants: [Restaurant] {
         RestaurantDirectory.recommendations(
             for: selectedCravings,
-            region: region
+            region: region,
+            matching: diet
         )
     }
 
@@ -31,7 +48,7 @@ struct MixerResultsView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
 
-                Text("Your Munchie Matches! 🐱")
+                Text("Your Munchie Matches! \(MunchkinPet.emoji)")
                     .font(.largeTitle)
                     .fontWeight(.bold)
 
@@ -43,14 +60,16 @@ struct MixerResultsView: View {
 
                 if matchedRestaurants.isEmpty {
                     ContentUnavailableView(
-                        region.isAnywhere
-                            ? "No matches yet!"
-                            : "No matches in \(region.rawValue)!",
+                        diet.isEmpty
+                            ? (region.isAnywhere ? "No matches yet!" : "No matches in \(region.rawValue)!")
+                            : "No dietary matches",
                         systemImage: "fork.knife",
                         description: Text(
-                            region.isAnywhere
-                                ? "Try a different craving combination."
-                                : "Try another region or a different craving combination."
+                            diet.isEmpty
+                                ? (region.isAnywhere
+                                    ? "Try a different craving combination."
+                                    : "Try another region or a different craving combination.")
+                                : "No spots match all your dietary needs. Try another region, different cravings, or relax a restriction."
                         )
                     )
                 }
@@ -76,7 +95,7 @@ struct MixerResultsView: View {
                                     RoundedRectangle(cornerRadius: 15)
                                 )
 
-                            Text("🐱")
+                            Text(MunchkinPet.emoji)
                                 .font(.system(size: 40))
                         }
                     }

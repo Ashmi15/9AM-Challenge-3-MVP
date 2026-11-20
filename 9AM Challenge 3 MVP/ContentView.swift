@@ -8,11 +8,15 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State private var selectedTab = 0
+    @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
+
     var body: some View {
-        TabView() {
+        TabView {
             Tab("Home", systemImage: "house.fill") {
                 HomeView()
+            }
+            Tab("Explore", systemImage: "magnifyingglass") {
+                AllRestaurantsView()
             }
             Tab("Goals", systemImage: "target") {
                 GoalsView()
@@ -20,12 +24,17 @@ struct ContentView: View {
             Tab("Munchie Mixer", systemImage: "mug.fill") {
                 MunchieMixerView()
             }
-            Tab("Shop", systemImage: "bag.fill") {
-                ShopView()
-            }
             Tab("Profile", systemImage: "person.crop.circle.fill") {
                 ProfileView()
             }
+        }
+        .fullScreenCover(
+            isPresented: Binding(
+                get: { !hasCompletedOnboarding },
+                set: { hasCompletedOnboarding = !$0 }
+            )
+        ) {
+            OnboardingView()
         }
     }
 }

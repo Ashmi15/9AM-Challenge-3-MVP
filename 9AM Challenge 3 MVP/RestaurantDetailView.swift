@@ -21,6 +21,23 @@ struct RestaurantDetailView: View {
 
     @State private var showConfirmation = false
 
+    // Kept here so the detail screen can show Munchkin's dietary check too.
+    @AppStorage("dietVegetarian") private var vegetarian = false
+    @AppStorage("dietVegan") private var vegan = false
+    @AppStorage("dietHalal") private var halal = false
+    @AppStorage("dietGlutenFree") private var glutenFree = false
+    @AppStorage("dietDairyFree") private var dairyFree = false
+
+    private var diet: DietaryPreferences {
+        DietaryPreferences(
+            vegetarian: vegetarian,
+            vegan: vegan,
+            halal: halal,
+            glutenFree: glutenFree,
+            dairyFree: dairyFree
+        )
+    }
+
     let flavours = [
         "🌶️ Spicy",
         "🍜 Savoury",
@@ -53,6 +70,10 @@ struct RestaurantDetailView: View {
                     Text(restaurant.description)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
+
+                    MunchkinDietMessage(
+                        adherence: restaurant.dietAdherence(for: diet)
+                    )
                 }
 
                 Divider()
@@ -145,7 +166,7 @@ struct RestaurantDetailView: View {
         .navigationTitle("Restaurant Details")
         .navigationBarTitleDisplayMode(.inline)
         .alert(
-            "Review Saved! 🐱",
+            "Review Saved! \(MunchkinPet.emoji)",
             isPresented: $showConfirmation
         ) {
             Button("Yay!", role: .cancel) {}
@@ -161,7 +182,7 @@ struct RestaurantDetailView: View {
 
             Divider()
 
-            Text("Help Munchkin Learn! 🐱")
+            Text("Help Munchkin Learn! \(MunchkinPet.emoji)")
                 .font(.title2)
                 .fontWeight(.bold)
 
@@ -248,7 +269,7 @@ struct RestaurantDetailView: View {
             Button {
                 saveReview()
             } label: {
-                Text("Save My Review 🐱")
+                Text("Save My Review \(MunchkinPet.emoji)")
                     .fontWeight(.semibold)
                     .frame(maxWidth: .infinity)
                     .padding()
@@ -307,6 +328,8 @@ struct RestaurantDetailView: View {
                 encoded,
                 forKey: "review_\(restaurant.name)"
             )
+            // Ratings and feedback drive the food persona.
+            _ = FoodPersonaStore.resolve(force: true)
             showConfirmation = true
         }
     }
@@ -319,6 +342,31 @@ struct RestaurantReviewData: Codable {
     let rating: Int
     let flavours: [String]
     let comment: String
+    let date: Date
+
+    init(
+        restaurantName: String,
+        rating: Int,
+        flavours: [String],
+        comment: String,
+        date: Date = Date()
+    ) {
+        self.restaurantName = restaurantName
+        self.rating = rating
+        self.flavours = flavours
+        self.comment = comment
+        self.date = date
+    }
+
+    /// Reviews saved before the date field existed still load correctly.
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        restaurantName = try container.decode(String.self, forKey: .restaurantName)
+        rating = try container.decode(Int.self, forKey: .rating)
+        flavours = try container.decode([String].self, forKey: .flavours)
+        comment = try container.decode(String.self, forKey: .comment)
+        date = try container.decodeIfPresent(Date.self, forKey: .date) ?? Date()
+    }
 }
 
 #Preview {
