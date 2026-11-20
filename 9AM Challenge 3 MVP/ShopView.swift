@@ -225,7 +225,7 @@ struct ShopView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Text("💰 \(coins)")
-                    .font(.headline)
+                    .font(.dynaPuff(17))
                     .foregroundStyle(.orange)
             }
         }
@@ -262,7 +262,7 @@ struct ShopView: View {
 
     private var subtitle: some View {
         Text("Spend your goal coins on a new look!")
-            .font(.subheadline)
+            .font(.dynaPuff(15))
             .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -272,11 +272,11 @@ struct ShopView: View {
     private var buySection: some View {
         VStack(alignment: .leading, spacing: 14) {
             Text("Accessories")
-                .font(.title2)
+                .font(.dynaPuff(22))
                 .fontWeight(.bold)
 
             Text("Tap an accessory to buy, wear or sell it.")
-                .font(.caption)
+                .font(.dynaPuff(13))
                 .foregroundStyle(.secondary)
 
             LazyVGrid(columns: itemColumns, spacing: 12) {
@@ -286,7 +286,7 @@ struct ShopView: View {
             }
 
             Label("Complete goals to earn more coins.", systemImage: "target")
-                .font(.caption)
+                .font(.dynaPuff(13))
                 .foregroundStyle(.secondary)
                 .padding(.top, 4)
         }
@@ -302,14 +302,14 @@ struct ShopView: View {
         } label: {
             VStack(spacing: 8) {
                 Text(owned || unlocked ? item.emoji : "?")
-                    .font(.system(size: 46, weight: .bold, design: .rounded))
+                    .font(.dynaPuff(46).weight(.bold))
                     .foregroundStyle(
                         owned || unlocked ? Color.primary : deepGreen.opacity(0.6)
                     )
                     .frame(height: 56)
 
                 Text(owned || unlocked ? item.name : "Mystery item")
-                    .font(.subheadline.weight(.semibold))
+                    .font(.dynaPuff(15).weight(.semibold))
                     .foregroundStyle(owned || unlocked ? Color.primary : .secondary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
@@ -317,15 +317,15 @@ struct ShopView: View {
                 Group {
                     if owned {
                         Label("Owned", systemImage: "checkmark.seal.fill")
-                            .font(.caption2.weight(.bold))
+                            .font(.dynaPuff(11).weight(.bold))
                             .foregroundStyle(deepGreen)
                     } else if !unlocked {
                         Label("Own \(item.unlockRequirement) items", systemImage: "lock.fill")
-                            .font(.caption2)
+                            .font(.dynaPuff(11))
                             .foregroundStyle(deepGreen.opacity(0.8))
                     } else {
                         Text("💰 \(item.price)")
-                            .font(.caption.weight(.bold))
+                            .font(.dynaPuff(13).weight(.bold))
                             .foregroundStyle(affordable ? Color.white : Color.black.opacity(0.35))
                             .padding(.horizontal, 14)
                             .padding(.vertical, 6)
@@ -367,13 +367,13 @@ struct ShopView: View {
             if ownedAccessories.isEmpty {
                 VStack(spacing: 10) {
                     Text("🧺")
-                        .font(.system(size: 44))
+                        .font(.dynaPuff(44))
 
                     Text("No accessories yet")
-                        .font(.headline)
+                        .font(.dynaPuff(17))
 
                     Text("Head to Buy and grab something cute for your munchkin.")
-                        .font(.caption)
+                        .font(.dynaPuff(13))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                 }
@@ -388,7 +388,7 @@ struct ShopView: View {
                     if !items.isEmpty {
                         VStack(alignment: .leading, spacing: 10) {
                             Text("\(category.emoji) \(category.title)")
-                                .font(.headline)
+                                .font(.dynaPuff(17))
 
                             LazyVGrid(columns: inventoryColumns, spacing: 10) {
                                 ForEach(items) { item in
@@ -410,12 +410,12 @@ struct ShopView: View {
         VStack(spacing: 12) {
             HStack {
                 Text("Your Munchkin")
-                    .font(.headline)
+                    .font(.dynaPuff(17))
 
                 Spacer()
 
                 Text("\(ownedIDs.count)/\(ShopCatalogue.items.count) owned")
-                    .font(.caption.weight(.semibold))
+                    .font(.dynaPuff(13).weight(.semibold))
                     .foregroundStyle(deepGreen)
             }
 
@@ -434,7 +434,7 @@ struct ShopView: View {
                     ? "Your munchkin is ready for a makeover!"
                     : "Tap to wear or remove. Touch and hold to sell."
             )
-            .font(.caption)
+            .font(.dynaPuff(13))
             .foregroundStyle(deepGreen)
             .multilineTextAlignment(.center)
 
@@ -443,7 +443,7 @@ struct ShopView: View {
                     equippedRaw = ""
                 } label: {
                     Text("Take everything off")
-                        .font(.caption.weight(.semibold))
+                        .font(.dynaPuff(13).weight(.semibold))
                         .foregroundStyle(Color.white)
                         .padding(.horizontal, 14)
                         .padding(.vertical, 8)
@@ -467,10 +467,10 @@ struct ShopView: View {
         } label: {
             VStack(spacing: 6) {
                 Text(item.emoji)
-                    .font(.system(size: 32))
+                    .font(.dynaPuff(32))
 
                 Text(item.name)
-                    .font(.caption2.weight(.semibold))
+                    .font(.dynaPuff(11).weight(.semibold))
                     .foregroundStyle(isWearing ? Color.orange : Color.primary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
@@ -601,22 +601,22 @@ private struct AccessoryDetailSheet: View {
     var body: some View {
         VStack(spacing: 18) {
             Text(item.emoji)
-                .font(.system(size: 76))
+                .font(.dynaPuff(76))
                 .frame(width: 130, height: 130)
                 .background(cream)
                 .clipShape(Circle())
 
             VStack(spacing: 6) {
                 Text(item.name)
-                    .font(.title2)
+                    .font(.dynaPuff(22))
                     .fontWeight(.bold)
 
                 Text("\(item.category.emoji) \(item.category.title) accessory")
-                    .font(.caption.weight(.semibold))
+                    .font(.dynaPuff(13).weight(.semibold))
                     .foregroundStyle(deepGreen)
 
                 Text(item.about)
-                    .font(.subheadline)
+                    .font(.dynaPuff(15))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.top, 12)
@@ -652,7 +652,7 @@ private struct AccessoryDetailSheet: View {
                         wearing ? "Take it off" : "Wear it",
                         systemImage: wearing ? "xmark.circle" : "checkmark.circle.fill"
                     )
-                    .font(.headline)
+                    .font(.dynaPuff(17))
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
                     .foregroundStyle(Color.white)
@@ -665,7 +665,7 @@ private struct AccessoryDetailSheet: View {
                     showSellConfirmation = true
                 } label: {
                     Label("Sell for 💰 \(item.sellValue)", systemImage: "minus.circle")
-                        .font(.subheadline.weight(.semibold))
+                        .font(.dynaPuff(15).weight(.semibold))
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)
                         .foregroundStyle(Color.red)
@@ -676,7 +676,7 @@ private struct AccessoryDetailSheet: View {
             }
         } else if !unlocked {
             Text("Own \(item.unlockRequirement) accessories to reveal this one.")
-                .font(.caption)
+                .font(.dynaPuff(13))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
@@ -691,7 +691,7 @@ private struct AccessoryDetailSheet: View {
                         ? "Buy for 💰 \(item.price)"
                         : "Not enough coins (💰 \(coins))"
                 )
-                .font(.headline)
+                .font(.dynaPuff(17))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
                 .foregroundStyle(Color.white)

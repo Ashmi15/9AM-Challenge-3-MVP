@@ -2,8 +2,9 @@
 //  VisitedRestaurants.swift
 //  9AM Challenge 3 MVP
 //
-//  Remembers which restaurants the user has actually eaten at. A restaurant
-//  can only ever count once towards the "try new restaurants" goals.
+//  Remembers which restaurants the user has eaten at, and which food goal each
+//  checked restaurant has paid. A spot can only ever pay one quest, and cuisine
+//  goals count each cuisine once no matter how many spots serve it.
 //
 
 import Foundation
@@ -49,11 +50,15 @@ enum VisitedRestaurants {
     }
 }
 
-/// A checked restaurant donates one point to a specific goal. Storing the
-/// pairing lets unchecking take exactly that point back.
+/// A checked restaurant pays exactly one food goal. Keeping the pairing means
+/// a spot already spent on one quest can never complete another, even one that
+/// is added later.
 struct RestaurantGoalCredit: Codable {
     let restaurantID: String
     let goalID: UUID
+    /// Set only for cuisine goals, so two spots serving the same cuisine still
+    /// pay just once.
+    let cuisineKey: String?
 }
 
 enum RestaurantGoalCredits {
@@ -70,6 +75,19 @@ enum RestaurantGoalCredits {
         all().first { $0.restaurantID == restaurantID }
     }
 
+    /// True once any quest has used a spot serving this cuisine.
+    static func usesCuisine(_ key: String) -> Bool {
+        let target = normalized(key)
+        return all().contains { credit in
+            // Credits from older builds predate cuisineKey, so fall back to
+            // the restaurant saved in the directory.
+            let cuisine = credit.cuisineKey
+                ?? RestaurantDirectory.all.first { $0.id == credit.restaurantID }?.cuisine
+                ?? ""
+            return normalized(cuisine) == target
+        }
+    }
+
     static func add(_ credit: RestaurantGoalCredit) {
         var credits = all().filter { $0.restaurantID != credit.restaurantID }
         credits.append(credit)
@@ -82,6 +100,12 @@ enum RestaurantGoalCredits {
         guard let found = credits.first(where: { $0.restaurantID == restaurantID }) else { return nil }
         save(credits.filter { $0.restaurantID != restaurantID })
         return found
+    }
+
+    static func normalized(_ cuisine: String) -> String {
+        cuisine.lowercased()
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
     }
 
     private static func save(_ credits: [RestaurantGoalCredit]) {

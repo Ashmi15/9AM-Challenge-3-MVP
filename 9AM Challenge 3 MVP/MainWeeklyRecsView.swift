@@ -51,7 +51,7 @@ struct WeeklyRecsView: View {
             VStack(alignment: .leading, spacing: 12) {
 
                 Text("Weekly Recommendations")
-                    .font(.largeTitle)
+                    .font(.dynaPuff(34))
                     .fontWeight(.bold)
 
                 Text(
@@ -59,7 +59,7 @@ struct WeeklyRecsView: View {
                         ? "Handpicked by Munchkin, just for you!"
                         : "Handpicked by Munchkin for the \(region.rawValue) region!"
                 )
-                .font(.subheadline)
+                .font(.dynaPuff(15))
                 .foregroundStyle(.secondary)
 
                 RegionFilterBar(selection: $preferredLocation)

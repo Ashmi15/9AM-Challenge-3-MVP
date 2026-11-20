@@ -87,13 +87,13 @@ struct AllRestaurantsView: View {
 
                 if !diet.isEmpty {
                     Toggle("Only spots matching all my dietary needs", isOn: $onlyDietMatches)
-                        .font(.subheadline)
+                        .font(.dynaPuff(15))
                         .tint(.teal)
                         .padding(.horizontal, 4)
                 }
 
                 Text("\(restaurants.count) \(restaurants.count == 1 ? "restaurant" : "restaurants")")
-                    .font(.caption)
+                    .font(.dynaPuff(13))
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
 

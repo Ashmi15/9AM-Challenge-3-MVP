@@ -13,19 +13,19 @@ struct RestaurantCard: View {
     var body: some View {
         HStack(spacing: 15) {
             Text(restaurant.emoji)
-                .font(.system(size: 42))
+                .font(.dynaPuff(42))
                 .frame(width: 70, height: 30)
                 .background(Color.blue.opacity(0.12))
                 .clipShape(RoundedRectangle(cornerRadius: 15))
 
             VStack(alignment: .leading, spacing: 5) {
                 Text(restaurant.name)
-                    .font(.headline)
+                    .font(.dynaPuff(17))
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
 
                 Text(restaurant.description)
-                    .font(.subheadline)
+                    .font(.dynaPuff(15))
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)

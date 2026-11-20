@@ -54,12 +54,12 @@ struct MunchkinAvatarView: View {
     var body: some View {
         ZStack {
             Text(displayedPersona.emoji)
-                .font(.system(size: size))
+                .font(.dynaPuff(size))
 
             if showAccessories {
                 ForEach(MunchkinOutfit.accessories(from: equippedRaw)) { item in
                     Text(item.emoji)
-                        .font(.system(size: max(8, item.previewSize * scale)))
+                        .font(.dynaPuff(max(8, item.previewSize * scale)))
                         .offset(CGSize(
                             width: item.previewOffset.width * scale,
                             height: item.previewOffset.height * scale

@@ -38,7 +38,7 @@ struct MunchieMixerView: View {
 
                     // MARK: Subtitle
                     Text("Mix your cravings, find your munch!")
-                        .font(.subheadline)
+                        .font(.dynaPuff(15))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.leading)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -48,7 +48,7 @@ struct MunchieMixerView: View {
                         MunchkinAvatarView(size: 70)
 
                         Text("What would you like to eat today?")
-                            .font(.headline)
+                            .font(.dynaPuff(17))
                             .padding(15)
                             .background(Color.white)
                             .clipShape(
@@ -58,7 +58,7 @@ struct MunchieMixerView: View {
 
                     // MARK: Craving Selection
                     Text("Choose your cravings!")
-                        .font(.title3)
+                        .font(.dynaPuff(20))
                         .fontWeight(.bold)
 
                     LazyVGrid(
@@ -90,19 +90,19 @@ struct MunchieMixerView: View {
 
                                     if !isSelected {
                                         Text(craving.emoji)
-                                            .font(.system(size: 45))
+                                            .font(.dynaPuff(45))
                                             .matchedGeometryEffect(
                                                 id: craving.name,
                                                 in: mixingAnimation
                                             )
                                     } else {
                                         Image(systemName: "checkmark.circle.fill")
-                                            .font(.system(size: 45))
+                                            .font(.dynaPuff(45))
                                             .foregroundStyle(.orange)
                                     }
 
                                     Text(craving.name)
-                                        .font(.subheadline)
+                                        .font(.dynaPuff(15))
                                         .fontWeight(.medium)
                                         .foregroundStyle(.black)
                                 }
@@ -125,7 +125,7 @@ struct MunchieMixerView: View {
                     VStack(spacing: 10) {
 
                         Text("Your Mixing Bowl")
-                            .font(.title3)
+                            .font(.dynaPuff(20))
                             .fontWeight(.bold)
 
                         ZStack {
@@ -149,7 +149,7 @@ struct MunchieMixerView: View {
                                 ) { craving in
 
                                     Text(craving.emoji)
-                                        .font(.system(size: 35))
+                                        .font(.dynaPuff(35))
                                         .matchedGeometryEffect(
                                             id: craving.name,
                                             in: mixingAnimation
@@ -164,7 +164,7 @@ struct MunchieMixerView: View {
                             ? "Your bowl is empty!"
                             : "\(selectedCravings.count) cravings added!"
                         )
-                        .font(.caption)
+                        .font(.dynaPuff(13))
                         .foregroundStyle(.secondary)
                     }
 
@@ -173,7 +173,7 @@ struct MunchieMixerView: View {
                         showResults = true
                     } label: {
                         Text("Mix My Cravings! 🥄")
-                            .font(.headline)
+                            .font(.dynaPuff(17))
                             .frame(maxWidth: .infinity)
                             .padding()
                             .background(

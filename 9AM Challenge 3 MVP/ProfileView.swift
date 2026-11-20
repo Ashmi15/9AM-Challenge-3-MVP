@@ -68,7 +68,7 @@ struct ProfileView: View {
 
                     // MARK: Profile Header
                     Text("Your food adventure, your rules!")
-                        .font(.subheadline)
+                        .font(.dynaPuff(15))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.leading)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -83,25 +83,25 @@ struct ProfileView: View {
                         VStack(alignment: .leading, spacing: 6) {
                             HStack {
                                 Text("My Food Persona")
-                                    .font(.headline)
+                                    .font(.dynaPuff(17))
 
                                 Spacer()
 
                                 Text("\(personaSnapshot.reviewCount) \(personaSnapshot.reviewCount == 1 ? "rating" : "ratings")")
-                                    .font(.caption)
+                                    .font(.dynaPuff(13))
                                     .foregroundStyle(.secondary)
                             }
 
                             Text(personaSnapshot.persona.name)
-                                .font(.title3)
+                                .font(.dynaPuff(20))
                                 .fontWeight(.bold)
 
                             Text(personaSnapshot.persona.tagline)
-                                .font(.caption)
+                                .font(.dynaPuff(13))
                                 .foregroundStyle(.secondary)
 
                             Text(personaSnapshot.explanation)
-                                .font(.caption)
+                                .font(.dynaPuff(13))
                                 .foregroundStyle(.secondary)
                                 .italic()
                         }
@@ -115,17 +115,17 @@ struct ProfileView: View {
                     // MARK: Pet + tutorial controls
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Your Munchkin")
-                            .font(.headline)
+                            .font(.dynaPuff(17))
 
                         HStack(spacing: 12) {
                             MunchkinAvatarView(persona: personaSnapshot.persona, size: 38)
 
                             VStack(alignment: .leading, spacing: 3) {
                                 Text(personaSnapshot.persona.name)
-                                    .font(.subheadline.weight(.semibold))
+                                    .font(.dynaPuff(15).weight(.semibold))
 
                                 Text("Changes automatically as I rate places.")
-                                    .font(.caption)
+                                    .font(.dynaPuff(13))
                                     .foregroundStyle(.secondary)
                             }
 
@@ -137,7 +137,7 @@ struct ProfileView: View {
                                 hasCompletedOnboarding = false
                             } label: {
                                 Label("Replay tutorial", systemImage: "book.fill")
-                                    .font(.caption.weight(.semibold))
+                                    .font(.dynaPuff(13).weight(.semibold))
                                     .padding(.horizontal, 12)
                                     .padding(.vertical, 8)
                                     .background(Color.teal.opacity(0.15))
@@ -157,27 +157,27 @@ struct ProfileView: View {
                     } label: {
                         HStack(spacing: 14) {
                             Image(systemName: "bag.fill")
-                                .font(.title2)
+                                .font(.dynaPuff(22))
                                 .foregroundStyle(.orange)
                                 .frame(width: 38)
 
                             VStack(alignment: .leading, spacing: 3) {
                                 Text("Munchkin Shop")
-                                    .font(.headline)
+                                    .font(.dynaPuff(17))
 
                                 Text("Dress up your pet with the coins you earn.")
-                                    .font(.caption)
+                                    .font(.dynaPuff(13))
                                     .foregroundStyle(.secondary)
                             }
 
                             Spacer()
 
                             Text("💰 \(coins)")
-                                .font(.subheadline.weight(.semibold))
+                                .font(.dynaPuff(15).weight(.semibold))
                                 .foregroundStyle(.orange)
 
                             Image(systemName: "chevron.right")
-                                .font(.caption)
+                                .font(.dynaPuff(13))
                                 .foregroundStyle(.secondary)
                         }
                         .padding(20)
@@ -190,7 +190,7 @@ struct ProfileView: View {
                     VStack(alignment: .leading, spacing: 20) {
 
                         Text("My Preferences")
-                            .font(.title2)
+                            .font(.dynaPuff(22))
                             .fontWeight(.bold)
 
                         // Location
@@ -199,7 +199,7 @@ struct ProfileView: View {
                                 "Preferred Location",
                                 systemImage: "mappin.circle.fill"
                             )
-                            .font(.headline)
+                            .font(.dynaPuff(17))
 
                             Picker(
                                 "Location",
@@ -212,7 +212,7 @@ struct ProfileView: View {
                             .tint(.teal)
 
                             Text("Your weekly picks and Munchie Mixer results will focus on this region.")
-                                .font(.caption)
+                                .font(.dynaPuff(13))
                                 .foregroundStyle(.secondary)
                         }
 
@@ -224,7 +224,7 @@ struct ProfileView: View {
                                 "Budget per Person",
                                 systemImage: "dollarsign.circle.fill"
                             )
-                            .font(.headline)
+                            .font(.dynaPuff(17))
 
                             Picker(
                                 "Budget",
@@ -245,7 +245,7 @@ struct ProfileView: View {
                                 "Dietary Preferences",
                                 systemImage: "leaf.fill"
                             )
-                            .font(.headline)
+                            .font(.dynaPuff(17))
 
                             Toggle("Vegetarian", isOn: $vegetarian)
                             Toggle("Vegan", isOn: $vegan)
@@ -253,7 +253,7 @@ struct ProfileView: View {
 
                             HStack(alignment: .bottom, spacing: 8) {
                                 Text(diet.summaryMessage)
-                                    .font(.caption)
+                                    .font(.dynaPuff(13))
                                     .padding(10)
                                     .background(Color.mint.opacity(0.2))
                                     .clipShape(RoundedRectangle(cornerRadius: 14))
@@ -276,7 +276,7 @@ struct ProfileView: View {
                         MunchkinAvatarView(persona: personaSnapshot.persona, size: 40)
 
                         Text("The better I know your tastes, the yummier your recommendations!")
-                            .font(.subheadline)
+                            .font(.dynaPuff(15))
                             .foregroundStyle(
                                 Color(red: 0.2, green: 0.45, blue: 0.35)
                             )

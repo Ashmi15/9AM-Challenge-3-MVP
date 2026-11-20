@@ -122,6 +122,11 @@ enum GoalKeywords {
         let lowercased = title.lowercased()
         return foodKeywords.contains { lowercased.contains($0) }
     }
+
+    /// Cuisine goals count distinct cuisine types, not restaurant visits.
+    static func isCuisineRelated(_ title: String) -> Bool {
+        title.lowercased().contains("cuisine")
+    }
 }
 
 struct GoalsView: View {
@@ -161,7 +166,7 @@ struct GoalsView: View {
                             .foregroundStyle(.green)
 
                         Text("Ready to Claim")
-                            .font(.title2)
+                            .font(.dynaPuff(22))
                             .fontWeight(.semibold)
                     }
                     .rowStyling(top: 12, bottom: 0)
@@ -182,8 +187,8 @@ struct GoalsView: View {
                 // Active goals
                 HStack(alignment: .firstTextBaseline) {
                     Text("Active Goals")
-                        .font(.title2)
-                        .fontWeight(.semibold)
+                        .font(.dynaPuff(22))
+                        .fontWeight(.medium)
 
                     Spacer()
 
@@ -191,7 +196,7 @@ struct GoalsView: View {
                         Button("Clear") {
                             clearPrompt = .active
                         }
-                        .font(.subheadline.weight(.semibold))
+                        .font(.dynaPuff(15).weight(.semibold))
                         .foregroundStyle(.orange)
                     }
                 }
@@ -222,7 +227,7 @@ struct GoalsView: View {
                 // Quick add
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Quick add")
-                        .font(.subheadline)
+                        .font(.dynaPuff(15))
                         .foregroundStyle(.secondary)
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack {
@@ -253,7 +258,7 @@ struct GoalsView: View {
                 // History
                 HStack(alignment: .firstTextBaseline) {
                     Text("History")
-                        .font(.title2)
+                        .font(.dynaPuff(22))
                         .fontWeight(.semibold)
 
                     Spacer()
@@ -262,7 +267,7 @@ struct GoalsView: View {
                         Button("Clear") {
                             clearPrompt = .history
                         }
-                        .font(.subheadline.weight(.semibold))
+                        .font(.dynaPuff(15).weight(.semibold))
                         .foregroundStyle(.orange)
                     }
                 }
@@ -278,7 +283,7 @@ struct GoalsView: View {
                             VStack(alignment: .leading) {
                                 Text(h.title).fontWeight(.medium)
                                 Text("\(h.difficulty) • \(h.completedAt.formatted(date: .abbreviated, time: .omitted))")
-                                    .font(.caption)
+                                    .font(.dynaPuff(13))
                                     .foregroundStyle(.secondary)
                             }
                             Spacer()
@@ -308,7 +313,7 @@ struct GoalsView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Text("💰 \(currency)")
-                        .font(.headline)
+                        .font(.dynaPuff(17))
                         .foregroundStyle(.orange)
                 }
             }
@@ -341,7 +346,7 @@ struct GoalsView: View {
                                 "This goal will update when you mark a restaurant as visited.",
                                 systemImage: "fork.knife"
                             )
-                            .font(.caption)
+                            .font(.dynaPuff(13))
                             .foregroundStyle(.secondary)
                         }
                     }
@@ -376,18 +381,18 @@ struct GoalsView: View {
 
                 if isCompleted {
                     Image(systemName: "flag.checkered")
-                        .font(.caption)
+                        .font(.dynaPuff(13))
                         .foregroundStyle(.green)
                 }
 
                 Spacer(minLength: 8)
 
                 Text("\(g.progress)/\(g.target)")
-                    .font(.caption.monospacedDigit())
+                    .font(.dynaPuff(13))
                     .foregroundStyle(.secondary)
 
                 Text(g.difficulty)
-                    .font(.caption)
+                    .font(.dynaPuff(13))
                     .foregroundStyle(.orange)
             }
 
@@ -400,7 +405,7 @@ struct GoalsView: View {
                     claimReward(g.id)
                 } label: {
                     Label("Claim +💰\(GoalReward.coins(for: g.difficulty))", systemImage: "gift.fill")
-                        .font(.subheadline.weight(.semibold))
+                        .font(.dynaPuff(15).weight(.semibold))
                         .frame(maxWidth: .infinity)
                         .foregroundStyle(.white)
                 }
@@ -565,17 +570,17 @@ private struct ClearConfirmationView: View {
                 Spacer(minLength: 12)
 
                 Image(systemName: prompt.icon)
-                    .font(.system(size: 56, weight: .semibold))
+                    .font(.dynaPuff(56).weight(.semibold))
                     .foregroundStyle(.orange)
                     .frame(width: 118, height: 118)
                     .background(Circle().fill(Color.orange.opacity(0.15)))
 
                 Text(prompt.title)
-                    .font(.title.weight(.bold))
+                    .font(.dynaPuff(28).weight(.bold))
                     .multilineTextAlignment(.center)
 
                 Text(prompt.message)
-                    .font(.body)
+                    .font(.dynaPuff(17))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 8)
@@ -587,7 +592,7 @@ private struct ClearConfirmationView: View {
                         onConfirm()
                     } label: {
                         Text(prompt.confirmTitle)
-                            .font(.headline)
+                            .font(.dynaPuff(17))
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
                             .foregroundStyle(Color.white)
@@ -600,7 +605,7 @@ private struct ClearConfirmationView: View {
                         onCancel()
                     } label: {
                         Text("Cancel")
-                            .font(.headline)
+                            .font(.dynaPuff(17))
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
                             .foregroundStyle(.orange)

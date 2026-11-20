@@ -236,7 +236,7 @@ struct MunchkinDietMessage: View {
     var body: some View {
         HStack(alignment: .bottom, spacing: 8) {
             Text(adherence.message)
-                .font(.caption)
+                .font(.dynaPuff(13))
                 .foregroundStyle(.primary)
                 .padding(10)
                 .background(adherence.tint)

@@ -69,7 +69,7 @@ struct RestaurantDetailView: View {
 
                 // MARK: Restaurant photo
                 Text(restaurant.emoji)
-                    .font(.system(size: 110))
+                    .font(.dynaPuff(110))
                     .frame(maxWidth: .infinity)
                     .frame(height: 200)
                     .background(Color.orange.opacity(0.15))
@@ -80,11 +80,11 @@ struct RestaurantDetailView: View {
                 // MARK: Restaurant name
                 VStack(alignment: .leading, spacing: 8) {
                     Text(restaurant.name)
-                        .font(.largeTitle)
+                        .font(.dynaPuff(34))
                         .fontWeight(.bold)
 
                     Text(restaurant.description)
-                        .font(.subheadline)
+                        .font(.dynaPuff(15))
                         .foregroundStyle(.secondary)
 
                     MunchkinDietMessage(
@@ -98,7 +98,7 @@ struct RestaurantDetailView: View {
                 VStack(alignment: .leading, spacing: 15) {
 
                     Text("Restaurant Information")
-                        .font(.title2)
+                        .font(.dynaPuff(22))
                         .fontWeight(.bold)
 
                     Label(
@@ -135,7 +135,7 @@ struct RestaurantDetailView: View {
                 // MARK: Menu
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Menu Highlights 🍽️")
-                        .font(.title2)
+                        .font(.dynaPuff(22))
                         .fontWeight(.bold)
 
                     Text("🍜 Signature Dish")
@@ -148,12 +148,11 @@ struct RestaurantDetailView: View {
                 // MARK: Visited status
                 VStack(alignment: .leading, spacing: 15) {
                     Text("Have you visited?")
-                        .font(.title2)
+                        .font(.dynaPuff(22))
                         .fontWeight(.bold)
 
                     Button {
                         if hasVisited {
-                            // Unchecking gives the point back to the goal.
                             setVisited(false)
                             uncheckVisit()
                         } else {
@@ -163,7 +162,7 @@ struct RestaurantDetailView: View {
                     } label: {
                         HStack(spacing: 10) {
                             Image(systemName: hasVisited ? "checkmark.square.fill" : "square")
-                                .font(.title2)
+                                .font(.dynaPuff(22))
                                 .foregroundStyle(hasVisited ? .orange : .secondary)
                             Text("I've eaten here!")
                                 .foregroundStyle(.primary)
@@ -171,8 +170,8 @@ struct RestaurantDetailView: View {
                     }
                     .buttonStyle(.plain)
 
-                    Text("New spots count towards goals. Uncheck to take the progress back.")
-                        .font(.caption)
+                    Text("Each spot counts once, for one quest only. Cuisine goals need different cuisines.")
+                        .font(.dynaPuff(13))
                         .foregroundStyle(.secondary)
                 }
 
@@ -207,20 +206,20 @@ struct RestaurantDetailView: View {
 
             HStack(spacing: 8) {
                 Text("Help Munchkin Learn!")
-                    .font(.title2)
+                    .font(.dynaPuff(22))
                     .fontWeight(.bold)
 
                 MunchkinAvatarView(size: 28)
             }
 
             Text("Tell Munchkin what you thought so it can recommend better restaurants next time!")
-                .font(.subheadline)
+                .font(.dynaPuff(15))
                 .foregroundStyle(.secondary)
 
             // Star rating
             VStack(alignment: .leading, spacing: 12) {
                 Text("How much did you enjoy it?")
-                    .font(.headline)
+                    .font(.dynaPuff(17))
 
                 HStack(spacing: 12) {
                     ForEach(1...5, id: \.self) { star in
@@ -232,7 +231,7 @@ struct RestaurantDetailView: View {
                                     ? "star.fill"
                                     : "star"
                             )
-                            .font(.system(size: 30))
+                            .font(.dynaPuff(30))
                             .foregroundStyle(.orange)
                         }
                         .buttonStyle(.plain)
@@ -243,7 +242,7 @@ struct RestaurantDetailView: View {
             // Flavour preferences
             VStack(alignment: .leading, spacing: 12) {
                 Text("What flavours did you enjoy?")
-                    .font(.headline)
+                    .font(.dynaPuff(17))
 
                 LazyVGrid(
                     columns: [
@@ -261,7 +260,7 @@ struct RestaurantDetailView: View {
                             }
                         } label: {
                             Text(flavour)
-                                .font(.subheadline)
+                                .font(.dynaPuff(15))
                                 .frame(maxWidth: .infinity)
                                 .padding(12)
                                 .background(
@@ -281,7 +280,7 @@ struct RestaurantDetailView: View {
             // Written review
             VStack(alignment: .leading, spacing: 12) {
                 Text("Anything else Munchkin should know?")
-                    .font(.headline)
+                    .font(.dynaPuff(17))
 
                 TextEditor(text: $writtenReview)
                     .frame(height: 120)
@@ -317,35 +316,47 @@ struct RestaurantDetailView: View {
 
     // MARK: - Visit progress
 
-    /// Checking a spot remembers the visit and donates one point to the first
-    /// active food goal. A restaurant can only hold one credit at a time.
+    /// Checking a spot pays the first unfinished food goal. A spot already
+    /// spent on another quest is ignored, so a new goal needs new restaurants.
     func recordVisitIfNeeded() {
         VisitedRestaurants.markVisited(restaurant.id)
 
         guard RestaurantGoalCredits.credit(for: restaurant.id) == nil,
-              let goalID = activeFoodGoalID() else { return }
+              let goal = activeFoodGoal() else { return }
 
-        RestaurantGoalCredits.add(
-            RestaurantGoalCredit(restaurantID: restaurant.id, goalID: goalID)
-        )
-        incrementRestaurantGoal(goalID: goalID)
+        let cuisineKey = GoalKeywords.isCuisineRelated(goal.title)
+            ? RestaurantGoalCredits.normalized(restaurant.cuisine)
+            : nil
+
+        // "New cuisines" means a cuisine no previous quest has claimed.
+        if let cuisineKey, RestaurantGoalCredits.usesCuisine(cuisineKey) { return }
+
+        RestaurantGoalCredits.add(RestaurantGoalCredit(
+            restaurantID: restaurant.id,
+            goalID: goal.id,
+            cuisineKey: cuisineKey
+        ))
+        incrementRestaurantGoal(goalID: goal.id)
     }
 
-    /// Unchecking takes that exact point back, so the bar matches the box.
+    /// Unchecking returns that spot's point to the goal it paid.
     func uncheckVisit() {
         guard let credit = RestaurantGoalCredits.remove(for: restaurant.id) else { return }
         decrementRestaurantGoal(goalID: credit.goalID)
     }
 
-    private func activeFoodGoalID() -> UUID? {
-        loadGoals().first(where: {
-            $0.completedAt == nil && GoalKeywords.isFoodRelated($0.title)
-        })?.id
+    private func activeFoodGoal() -> GoalItem? {
+        guard let data = UserDefaults.standard.data(forKey: "goals_v1"),
+              let goals = try? JSONDecoder().decode([GoalItem].self, from: data)
+        else { return nil }
+        return goals.first { $0.completedAt == nil && GoalKeywords.isFoodRelated($0.title) }
     }
 
     private func incrementRestaurantGoal(goalID: UUID) {
         var goals = loadGoals()
         guard let idx = goals.firstIndex(where: { $0.id == goalID }) else { return }
+        // Already paid out — toggling a box must not reopen the reward.
+        guard goals[idx].rewardClaimed != true else { return }
 
         goals[idx].progress += 1
         if goals[idx].progress >= goals[idx].target {
@@ -363,6 +374,8 @@ struct RestaurantDetailView: View {
     private func decrementRestaurantGoal(goalID: UUID) {
         var goals = loadGoals()
         guard let idx = goals.firstIndex(where: { $0.id == goalID }) else { return }
+        // Claimed rewards are history; leave the paid goal untouched.
+        guard goals[idx].rewardClaimed != true else { return }
 
         goals[idx].progress = max(0, goals[idx].progress - 1)
         if goals[idx].progress < goals[idx].target {

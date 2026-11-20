@@ -46,14 +46,14 @@ struct MixerResultsView: View {
 
                 HStack(spacing: 8) {
                     Text("Your Munchie Matches!")
-                        .font(.largeTitle)
+                        .font(.dynaPuff(34))
                         .fontWeight(.bold)
 
                     MunchkinAvatarView(size: 34)
                 }
 
                 Text("Based on your cravings: \(selectedCravings.joined(separator: ", "))")
-                    .font(.subheadline)
+                    .font(.dynaPuff(15))
                     .foregroundStyle(.secondary)
 
                 RegionFilterBar(selection: $preferredLocation)
@@ -88,7 +88,7 @@ struct MixerResultsView: View {
                         HStack(alignment: .bottom, spacing: 10) {
 
                             Text(explanation(for: restaurant))
-                                .font(.subheadline)
+                                .font(.dynaPuff(15))
                                 .padding(12)
                                 .background(Color.orange.opacity(0.15))
                                 .clipShape(

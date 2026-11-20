@@ -24,30 +24,30 @@ struct RestaurantPreviewSheet: View {
             // Restaurant information
             HStack(spacing: 15) {
                 Text(restaurant.emoji)
-                    .font(.system(size: 65))
+                    .font(.dynaPuff(65))
                     .frame(width: 100, height: 100)
                     .background(Color.orange.opacity(0.15))
                     .clipShape(RoundedRectangle(cornerRadius: 20))
 
                 VStack(alignment: .leading, spacing: 8) {
                     Text(restaurant.name)
-                        .font(.title2)
+                        .font(.dynaPuff(22))
                         .fontWeight(.bold)
                         .lineLimit(2)
 
                     Text(restaurant.description)
-                        .font(.subheadline)
+                        .font(.dynaPuff(15))
                         .foregroundStyle(.secondary)
 
                     Label(restaurant.area, systemImage: "mappin.circle")
-                        .font(.caption)
+                        .font(.dynaPuff(13))
                 }
             }
 
             Divider()
 
             Text("A little taste of what's waiting for you!")
-                .font(.subheadline)
+                .font(.dynaPuff(15))
                 .foregroundStyle(.secondary)
 
             Spacer(minLength: 0)
@@ -56,7 +56,7 @@ struct RestaurantPreviewSheet: View {
             HStack(alignment: .bottom, spacing: 10) {
                 VStack(alignment: .leading, spacing: 8) {
                     Text(reason)
-                        .font(.subheadline)
+                        .font(.dynaPuff(15))
                         .padding(12)
                         .background(Color.orange.opacity(0.15))
                         .clipShape(RoundedRectangle(cornerRadius: 16))

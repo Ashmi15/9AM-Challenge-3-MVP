@@ -19,18 +19,18 @@ struct GoalProgressRow: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 6) {
                 Text(title)
-                    .font(.subheadline)
+                    .font(.dynaPuff(15))
 
                 if completed {
                     Image(systemName: "flag.checkered")
-                        .font(.caption2)
+                        .font(.dynaPuff(11))
                         .foregroundStyle(.green)
                 }
 
                 Spacer()
 
                 Text("\(progress)/\(total)")
-                    .font(.caption.monospacedDigit())
+                    .font(.dynaPuff(13))
                     .foregroundStyle(.secondary)
             }
 
@@ -49,7 +49,7 @@ struct GoalProgressRow: View {
                             reward.map { "Claim +💰\($0)" } ?? "Claim Reward", // dont really understand ⭐️
                             systemImage: "gift.fill"
                         )
-                        .font(.caption.weight(.semibold))
+                        .font(.dynaPuff(13).weight(.semibold))
                         .frame(maxWidth: .infinity)
                         .foregroundStyle(.white)
                     }
@@ -57,7 +57,7 @@ struct GoalProgressRow: View {
                     .tint(.green)
                 } else {
                     Text("Claim your reward in the Goals tab")
-                        .font(.caption2)
+                        .font(.dynaPuff(11))
                         .foregroundStyle(.green)
                 }
             }

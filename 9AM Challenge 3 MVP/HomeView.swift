@@ -18,7 +18,7 @@ struct HomeView: View {
             ScrollView {
                 VStack {
                     Text("Are you ready for your next food adventure?")
-                        .font(.subheadline)
+                        .font(.dynaPuff(15))
                         .foregroundStyle(.secondary)
                         .bold()
                         .multilineTextAlignment(.leading)
@@ -27,12 +27,12 @@ struct HomeView: View {
                     VStack(alignment: .leading, spacing: 15) {
                         HStack {
                             Text("Your Food Persona")
-                                .font(.headline)
+                                .font(.dynaPuff(17))
 
                             Spacer()
 
                             Text("\(personaSnapshot.reviewCount) \(personaSnapshot.reviewCount == 1 ? "rating" : "ratings")")
-                                .font(.caption)
+                                .font(.dynaPuff(13))
                                 .foregroundStyle(.secondary)
                         }
 
@@ -41,15 +41,15 @@ struct HomeView: View {
 
                             VStack(alignment: .leading, spacing: 6) {
                                 Text(personaSnapshot.persona.name)
-                                    .font(.title3)
-                                    .fontWeight(.bold)
+                                    .font(.dynaPuff(20))
+                                    .fontWeight(.medium)
 
                                 Text(personaSnapshot.persona.tagline)
-                                    .font(.subheadline)
+                                    .font(.dynaPuff(15))
                                     .foregroundStyle(.secondary)
 
                                 Text(personaSnapshot.explanation)
-                                    .font(.caption)
+                                    .font(.dynaPuff(13))
                                     .foregroundStyle(.secondary)
                                     .italic()
                             }
@@ -64,16 +64,16 @@ struct HomeView: View {
 
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Goals Left For This Month")
-                            .font(.headline)
+                            .font(.dynaPuff(17))
 
                         if activeGoals.isEmpty {
                             VStack(spacing: 8) {
                                 Image(systemName: "target")
-                                    .font(.title2)
+                                    .font(.dynaPuff(22))
                                     .foregroundStyle(.green)
 
                                 Text("No active goals.\nSet some in the Goals tab.")
-                                    .font(.caption)
+                                    .font(.dynaPuff(13))
                                     .foregroundStyle(.secondary)
                                     .multilineTextAlignment(.center)
                             }
@@ -91,7 +91,7 @@ struct HomeView: View {
                         if !claimableGoals.isEmpty {
                             VStack(alignment: .leading, spacing: 8) {
                                 Label("Ready to Claim", systemImage: "gift.fill")
-                                    .font(.caption.weight(.semibold))
+                                    .font(.dynaPuff(13).weight(.semibold))
                                     .foregroundStyle(.green)
 
                                 ForEach(claimableGoals) { goal in
@@ -100,13 +100,13 @@ struct HomeView: View {
                                     } label: {
                                         HStack(spacing: 8) {
                                             Text(goal.title)
-                                                .font(.caption)
+                                                .font(.dynaPuff(13))
                                                 .lineLimit(1)
 
                                             Spacer(minLength: 6)
 
                                             Text("Claim +💰\(GoalReward.coins(for: goal.difficulty))")
-                                                .font(.caption.weight(.bold))
+                                                .font(.dynaPuff(13).weight(.bold))
                                                 .foregroundStyle(.green)
                                         }
                                         .padding(.vertical, 9)
@@ -142,7 +142,7 @@ struct HomeView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Text("💰 \(currency)")
-                        .font(.headline)
+                        .font(.dynaPuff(17))
                         .foregroundStyle(.orange)
                 }
             }

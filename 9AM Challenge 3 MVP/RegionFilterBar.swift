@@ -27,11 +27,11 @@ struct RegionFilterBar: View {
                                     ? "globe.asia.australia.fill"
                                     : "mappin.circle.fill"
                             )
-                            .font(.caption)
+                            .font(.dynaPuff(13))
 
                             Text(region.rawValue)
                         }
-                        .font(.subheadline.weight(.semibold))
+                        .font(.dynaPuff(15).weight(.semibold))
                         .padding(.horizontal, 14)
                         .padding(.vertical, 8)
                         .foregroundStyle(

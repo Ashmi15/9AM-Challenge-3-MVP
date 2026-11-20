@@ -52,12 +52,12 @@ struct OnboardingView: View {
         VStack(spacing: 0) {
             HStack {
                 Button("Skip") { finish() }
-                .font(.subheadline)
+                .font(.dynaPuff(15))
 
                 Spacer()
 
                 Text("Step \(step.rawValue + 1) of \(Step.allCases.count)")
-                    .font(.caption)
+                    .font(.dynaPuff(13))
                     .foregroundStyle(.secondary)
             }
             .padding(.horizontal, 24)
@@ -153,11 +153,11 @@ struct OnboardingView: View {
                 .clipShape(Circle())
 
             Text("Welcome to Munchkin!")
-                .font(.largeTitle.bold())
+                .font(.dynaPuff(34).bold())
                 .multilineTextAlignment(.center)
 
             Text("Your pocket food guide for Singapore. Tell us what you love and we'll find the good stuff.")
-                .font(.subheadline)
+                .font(.dynaPuff(15))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
 
@@ -188,10 +188,10 @@ struct OnboardingView: View {
     private var tutorialPage: some View {
         VStack(alignment: .leading, spacing: 20) {
             Text("A quick tour")
-                .font(.title2.bold())
+                .font(.dynaPuff(22).bold())
 
             Text("Five tabs, one very well-fed pet.")
-                .font(.subheadline)
+                .font(.dynaPuff(15))
                 .foregroundStyle(.secondary)
 
             VStack(spacing: 14) {
@@ -226,7 +226,7 @@ struct OnboardingView: View {
             .clipShape(RoundedRectangle(cornerRadius: 22))
 
             Text("After a meal, leave a rating and review in any restaurant — that's how your pet learns what you love!")
-                .font(.caption)
+                .font(.dynaPuff(13))
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -235,19 +235,19 @@ struct OnboardingView: View {
     private var questionsPage: some View {
         VStack(alignment: .leading, spacing: 20) {
             Text("What do you love to eat?")
-                .font(.title2.bold())
+                .font(.dynaPuff(22).bold())
 
             Text("Two quick questions and I'll pick the Munchkin that fits you best.")
-                .font(.subheadline)
+                .font(.dynaPuff(15))
                 .foregroundStyle(.secondary)
 
             VStack(alignment: .leading, spacing: 14) {
                 VStack(alignment: .leading, spacing: 10) {
                     Text("1. Which flavours make you happiest?")
-                        .font(.headline)
+                        .font(.dynaPuff(17))
 
                     Text("Pick as many as you like.")
-                        .font(.caption)
+                        .font(.dynaPuff(13))
                         .foregroundStyle(.secondary)
 
                     LazyVGrid(columns: answerColumns, spacing: 10) {
@@ -267,7 +267,7 @@ struct OnboardingView: View {
 
                 VStack(alignment: .leading, spacing: 10) {
                     Text("2. What's your perfect treat?")
-                        .font(.headline)
+                        .font(.dynaPuff(17))
 
                     LazyVGrid(columns: answerColumns, spacing: 10) {
                         ForEach(PetQuestionnaire.treats) { option in
@@ -291,7 +291,7 @@ struct OnboardingView: View {
     private var recommendationPage: some View {
         VStack(spacing: 20) {
             Text("Meet your starting Munchkin!")
-                .font(.title2.bold())
+                .font(.dynaPuff(22).bold())
                 .multilineTextAlignment(.center)
 
             VStack(spacing: 14) {
@@ -301,21 +301,21 @@ struct OnboardingView: View {
                     .clipShape(Circle())
 
                 Text(recommendation.persona.name)
-                    .font(.title.bold())
+                    .font(.dynaPuff(28).bold())
                     .multilineTextAlignment(.center)
 
                 Text(recommendation.persona.tagline)
-                    .font(.subheadline)
+                    .font(.dynaPuff(15))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
 
                 Text(recommendation.explanation)
-                    .font(.caption)
+                    .font(.dynaPuff(13))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
 
                 Text("Rate a few restaurants and I'll change to match your reviews.")
-                    .font(.caption2)
+                    .font(.dynaPuff(11))
                     .foregroundStyle(.teal)
                     .multilineTextAlignment(.center)
             }
@@ -328,7 +328,7 @@ struct OnboardingView: View {
                 goNext()
             } label: {
                 Label("Looks good — continue", systemImage: "checkmark.circle.fill")
-                    .font(.subheadline.weight(.semibold))
+                    .font(.dynaPuff(15).weight(.semibold))
             }
             .buttonStyle(.borderedProminent)
             .tint(.orange)
@@ -340,12 +340,12 @@ struct OnboardingView: View {
     private var preferencesPage: some View {
         VStack(alignment: .leading, spacing: 20) {
             Text("Make it yours")
-                .font(.title2.bold())
+                .font(.dynaPuff(22).bold())
 
             VStack(alignment: .leading, spacing: 20) {
                 VStack(alignment: .leading, spacing: 8) {
                     Label("Preferred location", systemImage: "mappin.circle.fill")
-                        .font(.headline)
+                        .font(.dynaPuff(17))
 
                     Picker("Location", selection: $preferredLocation) {
                         ForEach(locations, id: \.self) { location in
@@ -359,7 +359,7 @@ struct OnboardingView: View {
 
                 VStack(alignment: .leading, spacing: 8) {
                     Label("Budget per person", systemImage: "dollarsign.circle.fill")
-                        .font(.headline)
+                        .font(.dynaPuff(17))
 
                     Picker("Budget", selection: $preferredBudget) {
                         ForEach(budgets, id: \.self) { budget in
@@ -373,7 +373,7 @@ struct OnboardingView: View {
 
                 VStack(alignment: .leading, spacing: 10) {
                     Label("Dietary needs", systemImage: "leaf.fill")
-                        .font(.headline)
+                        .font(.dynaPuff(17))
 
                     Toggle("Vegetarian", isOn: $vegetarian)
                     Toggle("Vegan", isOn: $vegan)
@@ -381,7 +381,7 @@ struct OnboardingView: View {
 
                     HStack(alignment: .bottom, spacing: 8) {
                         Text(diet.summaryMessage)
-                            .font(.caption)
+                            .font(.dynaPuff(13))
                             .padding(10)
                             .background(Color.mint.opacity(0.2))
                             .clipShape(RoundedRectangle(cornerRadius: 14))
@@ -397,7 +397,7 @@ struct OnboardingView: View {
             .clipShape(RoundedRectangle(cornerRadius: 22))
 
             Text("Don't worry — you can change all of this later in Profile.")
-                .font(.caption)
+                .font(.dynaPuff(13))
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -414,10 +414,10 @@ struct OnboardingView: View {
         Button(action: action) {
             HStack(spacing: 8) {
                 Text(option.emoji)
-                    .font(.title3)
+                    .font(.dynaPuff(20))
 
                 Text(option.label)
-                    .font(.caption.weight(.semibold))
+                    .font(.dynaPuff(13).weight(.semibold))
                     .multilineTextAlignment(.leading)
                     .lineLimit(2)
                     .minimumScaleFactor(0.85)
@@ -426,7 +426,7 @@ struct OnboardingView: View {
 
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
-                        .font(.caption)
+                        .font(.dynaPuff(13))
                         .foregroundStyle(.orange)
                 }
             }
@@ -446,15 +446,15 @@ struct OnboardingView: View {
     private func infoRow(_ icon: String, _ title: String, _ detail: String) -> some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: icon)
-                .font(.title3)
+                .font(.dynaPuff(20))
                 .foregroundStyle(.orange)
                 .frame(width: 30)
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(title)
-                    .font(.subheadline.weight(.semibold))
+                    .font(.dynaPuff(15).weight(.semibold))
                 Text(detail)
-                    .font(.caption)
+                    .font(.dynaPuff(13))
                     .foregroundStyle(.secondary)
             }
         }
@@ -464,15 +464,15 @@ struct OnboardingView: View {
     private func tutorialRow(_ icon: String, _ title: String, _ detail: String) -> some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: icon)
-                .font(.title3)
+                .font(.dynaPuff(20))
                 .foregroundStyle(.teal)
                 .frame(width: 30)
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(title)
-                    .font(.subheadline.weight(.semibold))
+                    .font(.dynaPuff(15).weight(.semibold))
                 Text(detail)
-                    .font(.caption)
+                    .font(.dynaPuff(13))
                     .foregroundStyle(.secondary)
             }
         }

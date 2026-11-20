@@ -36,7 +36,7 @@ struct WeeklyRecommendationsSection: View {
         VStack(alignment: .leading, spacing: 5) {
             HStack {
                 Text("Top Weekly Recommendations")
-                    .font(.headline)
+                    .font(.dynaPuff(17))
 
                 Spacer()
 
@@ -46,7 +46,7 @@ struct WeeklyRecommendationsSection: View {
 
                         Image(systemName: "arrow.right")
                     }
-                    .font(.subheadline)
+                    .font(.dynaPuff(15))
                     .foregroundStyle(.blue)
                 }
             }
@@ -69,9 +69,9 @@ struct WeeklyRecommendationsSection: View {
                         )
 
                         Image(systemName: "chevron.down")
-                            .font(.caption2)
+                            .font(.dynaPuff(11))
                     }
-                    .font(.caption.weight(.semibold))
+                    .font(.dynaPuff(13).weight(.semibold))
                     .foregroundStyle(.orange)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 5)
@@ -87,7 +87,7 @@ struct WeeklyRecommendationsSection: View {
                 Text(diet.isEmpty
                      ? "No picks in this region yet. Try another region."
                      : "No spots here match all your dietary needs. Try another region or relax a restriction.")
-                    .font(.caption)
+                    .font(.dynaPuff(13))
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, minHeight: 60)
             } else {
