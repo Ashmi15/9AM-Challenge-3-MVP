@@ -16,8 +16,6 @@ struct WeeklyRecsView: View {
     @AppStorage("dietVegetarian") private var vegetarian = false
     @AppStorage("dietVegan") private var vegan = false
     @AppStorage("dietHalal") private var halal = false
-    @AppStorage("dietGlutenFree") private var glutenFree = false
-    @AppStorage("dietDairyFree") private var dairyFree = false
 
     @State private var selectedRestaurant: Restaurant?
     @State private var searchText = ""
@@ -30,9 +28,7 @@ struct WeeklyRecsView: View {
         DietaryPreferences(
             vegetarian: vegetarian,
             vegan: vegan,
-            halal: halal,
-            glutenFree: glutenFree,
-            dairyFree: dairyFree
+            halal: halal
         )
     }
 

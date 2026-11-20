@@ -15,8 +15,6 @@ struct OnboardingView: View {
     @AppStorage("dietVegetarian") private var vegetarian = false
     @AppStorage("dietVegan") private var vegan = false
     @AppStorage("dietHalal") private var halal = false
-    @AppStorage("dietGlutenFree") private var glutenFree = false
-    @AppStorage("dietDairyFree") private var dairyFree = false
 
     @State private var step: Step = .welcome
     @State private var selectedFlavours: Set<String> = []
@@ -42,9 +40,7 @@ struct OnboardingView: View {
         DietaryPreferences(
             vegetarian: vegetarian,
             vegan: vegan,
-            halal: halal,
-            glutenFree: glutenFree,
-            dairyFree: dairyFree
+            halal: halal
         )
     }
 
@@ -382,8 +378,6 @@ struct OnboardingView: View {
                     Toggle("Vegetarian", isOn: $vegetarian)
                     Toggle("Vegan", isOn: $vegan)
                     Toggle("Halal-friendly", isOn: $halal)
-                    Toggle("Gluten-free", isOn: $glutenFree)
-                    Toggle("Dairy-free", isOn: $dairyFree)
 
                     HStack(alignment: .bottom, spacing: 8) {
                         Text(diet.summaryMessage)

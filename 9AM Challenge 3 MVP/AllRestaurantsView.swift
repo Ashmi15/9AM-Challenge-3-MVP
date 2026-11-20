@@ -12,8 +12,6 @@ struct AllRestaurantsView: View {
     @AppStorage("dietVegetarian") private var vegetarian = false
     @AppStorage("dietVegan") private var vegan = false
     @AppStorage("dietHalal") private var halal = false
-    @AppStorage("dietGlutenFree") private var glutenFree = false
-    @AppStorage("dietDairyFree") private var dairyFree = false
 
     @State private var searchText = ""
     @State private var onlyDietMatches = true
@@ -26,9 +24,7 @@ struct AllRestaurantsView: View {
         DietaryPreferences(
             vegetarian: vegetarian,
             vegan: vegan,
-            halal: halal,
-            glutenFree: glutenFree,
-            dairyFree: dairyFree
+            halal: halal
         )
     }
 

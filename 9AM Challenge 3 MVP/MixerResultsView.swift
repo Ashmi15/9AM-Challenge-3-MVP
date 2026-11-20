@@ -18,8 +18,6 @@ struct MixerResultsView: View {
     @AppStorage("dietVegetarian") private var vegetarian = false
     @AppStorage("dietVegan") private var vegan = false
     @AppStorage("dietHalal") private var halal = false
-    @AppStorage("dietGlutenFree") private var glutenFree = false
-    @AppStorage("dietDairyFree") private var dairyFree = false
 
     private var region: RestaurantRegion {
         RestaurantRegion.from(preference: preferredLocation)
@@ -29,9 +27,7 @@ struct MixerResultsView: View {
         DietaryPreferences(
             vegetarian: vegetarian,
             vegan: vegan,
-            halal: halal,
-            glutenFree: glutenFree,
-            dairyFree: dairyFree
+            halal: halal
         )
     }
 

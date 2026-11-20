@@ -290,6 +290,13 @@ struct GoalsView: View {
                         .background(cardColor)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                         .rowStyling()
+                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                            Button(role: .destructive) {
+                                deleteHistory(h.id)
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
                     }
                 }
             }
@@ -309,11 +316,10 @@ struct GoalsView: View {
             .fullScreenCover(item: $clearPrompt) { prompt in
                 ClearConfirmationView(
                     prompt: prompt,
-                    totalCount: prompt == .history ? history.count : activeGoals.count,
-                    onConfirm: { count in
+                    onConfirm: {
                         switch prompt {
                         case .history:
-                            clearHistory(count: count)
+                            clearAllHistory()
                         case .active:
                             clearActiveGoals()
                         }
@@ -439,6 +445,11 @@ struct GoalsView: View {
         save()
     }
 
+    func deleteHistory(_ id: UUID) {
+        history.removeAll { $0.id == id }
+        save()
+    }
+
     func claimReward(_ id: UUID) {
         GoalClaim.claim(id)
         load()
@@ -479,18 +490,11 @@ struct GoalsView: View {
         }
     }
 
-    /// Removes the oldest `count` history records. Goals that still say
+    /// Wipes the whole history in one tap. Goals that still say
     /// rewardClaimed != true stay claimable, so clearing the log can never
     /// swallow a reward the user has not collected yet.
-    func clearHistory(count: Int) {
-        guard count > 0 else { return }
-
-        if count >= history.count {
-            history = []
-        } else {
-            let oldestFirst = history.sorted { $0.completedAt < $1.completedAt }
-            history = Array(oldestFirst.suffix(from: count))
-        }
+    func clearAllHistory() {
+        history = []
         save()
     }
 
@@ -534,61 +538,23 @@ enum ClearPrompt: String, Identifiable {
         case .active: return "checklist.unchecked"
         }
     }
-}
 
-/// Full-screen confirmation used by both Clear buttons so the warning is
-/// impossible to miss instead of tucked into a bottom action sheet. History
-/// also lets you pick how many records to remove.
-private struct ClearConfirmationView: View {
-    let prompt: ClearPrompt
-    let totalCount: Int
-    let onConfirm: (Int) -> Void
-    let onCancel: () -> Void
-
-    @State private var count: Int
-
-    private let backgroundColor = Color(red: 1.0, green: 0.97, blue: 0.93)
-
-    init(
-        prompt: ClearPrompt,
-        totalCount: Int,
-        onConfirm: @escaping (Int) -> Void,
-        onCancel: @escaping () -> Void
-    ) {
-        self.prompt = prompt
-        self.totalCount = totalCount
-        self.onConfirm = onConfirm
-        self.onCancel = onCancel
-        _count = State(initialValue: max(totalCount, 1))
-    }
-
-    private var showsCountPicker: Bool {
-        prompt == .history && totalCount > 1
-    }
-
-    private var isEverything: Bool {
-        count >= totalCount
-    }
-
-    private var messageText: String {
-        guard prompt == .history, totalCount > 1 else { return prompt.message }
-        return "You have \(totalCount) completed goal records. Choose how many to remove — the oldest go first."
-    }
-
-    private var confirmTitle: String {
-        switch prompt {
-        case .history:
-            if totalCount <= 1 {
-                return "Clear History"
-            }
-            let noun = count == 1 ? "Record" : "Records"
-            return isEverything
-                ? "Clear All \(totalCount) Records"
-                : "Clear \(count) \(noun)"
-        case .active:
-            return "Clear Active Goals"
+    var confirmTitle: String {
+        switch self {
+        case .history: return "Clear History"
+        case .active: return "Clear Active Goals"
         }
     }
+}
+
+/// Full-screen confirmation so the warning is impossible to miss instead of
+/// tucked into a bottom action sheet.
+private struct ClearConfirmationView: View {
+    let prompt: ClearPrompt
+    let onConfirm: () -> Void
+    let onCancel: () -> Void
+
+    private let backgroundColor = Color(red: 1.0, green: 0.97, blue: 0.93)
 
     var body: some View {
         ZStack {
@@ -608,23 +574,19 @@ private struct ClearConfirmationView: View {
                     .font(.title.weight(.bold))
                     .multilineTextAlignment(.center)
 
-                Text(messageText)
+                Text(prompt.message)
                     .font(.body)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 8)
 
-                if showsCountPicker {
-                    countPicker
-                }
-
                 Spacer(minLength: 8)
 
                 VStack(spacing: 12) {
                     Button(role: .destructive) {
-                        onConfirm(count)
+                        onConfirm()
                     } label: {
-                        Text(confirmTitle)
+                        Text(prompt.confirmTitle)
                             .font(.headline)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
@@ -652,72 +614,6 @@ private struct ClearConfirmationView: View {
             }
             .padding(.horizontal, 28)
         }
-    }
-
-    private var countPicker: some View {
-        VStack(spacing: 14) {
-            HStack(spacing: 20) {
-                Button {
-                    count = max(1, count - 1)
-                } label: {
-                    Image(systemName: "minus")
-                        .font(.headline)
-                        .foregroundStyle(count > 1 ? Color.orange : Color.secondary.opacity(0.4))
-                        .frame(width: 48, height: 48)
-                        .background(Circle().fill(Color.white))
-                }
-                .buttonStyle(.plain)
-                .disabled(count <= 1)
-                .accessibilityLabel("One fewer record")
-                .accessibilityValue("\(count)")
-
-                VStack(spacing: 0) {
-                    Text("\(count)")
-                        .font(.system(size: 44, weight: .bold, design: .rounded))
-                        .monospacedDigit()
-                        .foregroundStyle(.orange)
-
-                    Text(count == 1 ? "record" : "records")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                }
-                .frame(minWidth: 96)
-
-                Button {
-                    count = min(totalCount, count + 1)
-                } label: {
-                    Image(systemName: "plus")
-                        .font(.headline)
-                        .foregroundStyle(count < totalCount ? Color.orange : Color.secondary.opacity(0.4))
-                        .frame(width: 48, height: 48)
-                        .background(Circle().fill(Color.white))
-                }
-                .buttonStyle(.plain)
-                .disabled(count >= totalCount)
-                .accessibilityLabel("One more record")
-                .accessibilityValue("\(count)")
-            }
-
-            HStack(spacing: 20) {
-                Button("Select All \(totalCount)") {
-                    count = totalCount
-                }
-                .disabled(isEverything)
-
-                Button("Just 1") {
-                    count = 1
-                }
-                .disabled(count == 1)
-            }
-            .font(.subheadline.weight(.semibold))
-            .foregroundStyle(.orange)
-        }
-        .padding(.vertical, 16)
-        .padding(.horizontal, 22)
-        .background(
-            RoundedRectangle(cornerRadius: 24)
-                .fill(Color.white.opacity(0.75))
-        )
     }
 }
 

@@ -58,41 +58,12 @@ struct DietaryRestriction: Hashable, Identifiable {
         negative: ["pork", "bacon", "ham", "liquor", "alcohol", "pub", "sausage"]
     )
 
-    static let glutenFree = DietaryRestriction(
-        key: "dietGlutenFree",
-        label: "gluten-free",
-        positive: [
-            "gluten-free", "gluten free", "glutenfree", "wheat-free", "wheat free"
-        ],
-        negative: [
-            "pizza", "pasta", "bakery", "bread", "burger", "noodle", "cake",
-            "pastry", "roti", "prata", "naan", "waffle", "donut", "cafe",
-            "sandwich", "bun", "pancake", "crepe", "cookie", "brownie",
-            "dim sum", "dumpling", "xiao long bao"
-        ]
-    )
-
-    static let dairyFree = DietaryRestriction(
-        key: "dietDairyFree",
-        label: "dairy-free",
-        positive: [
-            "dairy-free", "dairy free", "dairyfree", "lactose-free",
-            "lactose free", "oat milk", "plant milk"
-        ],
-        negative: [
-            "ice cream", "gelato", "cheese", "milk", "yogurt", "cream",
-            "bakery", "dessert", "cafe", "pancake", "butter", "custard",
-            "milkshake", "latte", "cappuccino", "cheesecake"
-        ]
-    )
 }
 
 struct DietaryPreferences {
     var vegetarian: Bool
     var vegan: Bool
     var halal: Bool
-    var glutenFree: Bool
-    var dairyFree: Bool
 
     /// Reads the same keys the Profile toggles write to.
     static func current() -> DietaryPreferences {
@@ -100,9 +71,7 @@ struct DietaryPreferences {
         return DietaryPreferences(
             vegetarian: defaults.bool(forKey: "dietVegetarian"),
             vegan: defaults.bool(forKey: "dietVegan"),
-            halal: defaults.bool(forKey: "dietHalal"),
-            glutenFree: defaults.bool(forKey: "dietGlutenFree"),
-            dairyFree: defaults.bool(forKey: "dietDairyFree")
+            halal: defaults.bool(forKey: "dietHalal")
         )
     }
 
@@ -111,8 +80,6 @@ struct DietaryPreferences {
         if vegetarian { restrictions.append(.vegetarian) }
         if vegan { restrictions.append(.vegan) }
         if halal { restrictions.append(.halal) }
-        if glutenFree { restrictions.append(.glutenFree) }
-        if dairyFree { restrictions.append(.dairyFree) }
         return restrictions
     }
 

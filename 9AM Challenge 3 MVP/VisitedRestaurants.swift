@@ -49,44 +49,6 @@ enum VisitedRestaurants {
     }
 }
 
-/// The boxes the user currently has ticked. This is separate from "ever
-/// visited" so unchecking visibly clears the box as well as the progress.
-enum CheckedRestaurants {
-    private static let key = "checked_restaurant_ids_v1"
-
-    static func all() -> Set<String> {
-        let defaults = UserDefaults.standard
-        if let data = defaults.data(forKey: key),
-           let saved = try? JSONDecoder().decode([String].self, from: data) {
-            return Set(saved)
-        }
-        // Older data only had goal credits. Never seed from the visited list:
-        // a past visit must not bring a checkmark back after it was cleared.
-        let seeded = Set(RestaurantGoalCredits.all().map(\.restaurantID))
-        if !seeded.isEmpty { save(seeded) }
-        return seeded
-    }
-
-    static func contains(_ id: String) -> Bool { all().contains(id) }
-
-    static func mark(_ id: String) {
-        var ids = all()
-        ids.insert(id)
-        save(ids)
-    }
-
-    static func unmark(_ id: String) {
-        var ids = all()
-        ids.remove(id)
-        save(ids)
-    }
-
-    private static func save(_ ids: Set<String>) {
-        guard let data = try? JSONEncoder().encode(ids.sorted()) else { return }
-        UserDefaults.standard.set(data, forKey: key)
-    }
-}
-
 /// A checked restaurant donates one point to a specific goal. Storing the
 /// pairing lets unchecking take exactly that point back.
 struct RestaurantGoalCredit: Codable {
@@ -120,30 +82,6 @@ enum RestaurantGoalCredits {
         guard let found = credits.first(where: { $0.restaurantID == restaurantID }) else { return nil }
         save(credits.filter { $0.restaurantID != restaurantID })
         return found
-    }
-
-    /// Builds credits for visits saved by earlier builds, which only had a
-    /// visited list and never reversed progress when a box was unchecked.
-    static func migrateFromVisitedIfNeeded() {
-        let defaults = UserDefaults.standard
-        guard defaults.data(forKey: key) == nil else { return }
-
-        let goals = defaults.data(forKey: "goals_v1")
-            .flatMap { try? JSONDecoder().decode([GoalItem].self, from: $0) } ?? []
-        let goalID = goals.first(where: {
-            $0.completedAt == nil && GoalKeywords.isFoodRelated($0.title)
-        })?.id
-            ?? goals.first(where: {
-                $0.progress > 0 && GoalKeywords.isFoodRelated($0.title)
-            })?.id
-
-        if let goalID {
-            save(VisitedRestaurants.all().map {
-                RestaurantGoalCredit(restaurantID: $0, goalID: goalID)
-            })
-        } else {
-            save([])
-        }
     }
 
     private static func save(_ credits: [RestaurantGoalCredit]) {

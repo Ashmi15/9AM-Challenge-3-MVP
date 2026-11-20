@@ -14,34 +14,43 @@ struct RestaurantDetailView: View {
     let restaurant: Restaurant
 
     // User feedback
-    @State private var hasVisited = false
+    /// The tick is stored directly, never derived from visit history, so an
+    /// unchecked box stays unchecked when the screen is reopened.
+    @AppStorage("checked_restaurant_ids_v2") private var checkedRaw = ""
     @State private var rating = 0
     @State private var selectedFlavours: Set<String> = []
     @State private var writtenReview = ""
 
     @State private var showConfirmation = false
 
-    init(restaurant: Restaurant) {
-        RestaurantGoalCredits.migrateFromVisitedIfNeeded()
-        self.restaurant = restaurant
-        // Remembered separately from the visit history so unchecking sticks.
-        _hasVisited = State(initialValue: CheckedRestaurants.contains(restaurant.id))
+    private var checkedIDs: Set<String> {
+        Set(checkedRaw.split(separator: ",").map(String.init))
+    }
+
+    private var hasVisited: Bool {
+        checkedIDs.contains(restaurant.id)
+    }
+
+    private func setVisited(_ visited: Bool) {
+        var ids = checkedIDs
+        if visited {
+            ids.insert(restaurant.id)
+        } else {
+            ids.remove(restaurant.id)
+        }
+        checkedRaw = ids.sorted().joined(separator: ",")
     }
 
     // Kept here so the detail screen can show Munchkin's dietary check too.
     @AppStorage("dietVegetarian") private var vegetarian = false
     @AppStorage("dietVegan") private var vegan = false
     @AppStorage("dietHalal") private var halal = false
-    @AppStorage("dietGlutenFree") private var glutenFree = false
-    @AppStorage("dietDairyFree") private var dairyFree = false
 
     private var diet: DietaryPreferences {
         DietaryPreferences(
             vegetarian: vegetarian,
             vegan: vegan,
-            halal: halal,
-            glutenFree: glutenFree,
-            dairyFree: dairyFree
+            halal: halal
         )
     }
 
@@ -145,12 +154,10 @@ struct RestaurantDetailView: View {
                     Button {
                         if hasVisited {
                             // Unchecking gives the point back to the goal.
-                            hasVisited = false
-                            CheckedRestaurants.unmark(restaurant.id)
+                            setVisited(false)
                             uncheckVisit()
                         } else {
-                            hasVisited = true
-                            CheckedRestaurants.mark(restaurant.id)
+                            setVisited(true)
                             recordVisitIfNeeded()
                         }
                     } label: {

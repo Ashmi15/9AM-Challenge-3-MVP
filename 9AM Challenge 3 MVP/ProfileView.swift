@@ -26,12 +26,6 @@ struct ProfileView: View {
     @AppStorage("dietHalal")
     private var halal = false
 
-    @AppStorage("dietGlutenFree")
-    private var glutenFree = false
-
-    @AppStorage("dietDairyFree")
-    private var dairyFree = false
-
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = true
     @AppStorage("goal_currency_v1") private var coins = 0
 
@@ -41,9 +35,7 @@ struct ProfileView: View {
         DietaryPreferences(
             vegetarian: vegetarian,
             vegan: vegan,
-            halal: halal,
-            glutenFree: glutenFree,
-            dairyFree: dairyFree
+            halal: halal
         )
     }
 
@@ -258,8 +250,6 @@ struct ProfileView: View {
                             Toggle("Vegetarian", isOn: $vegetarian)
                             Toggle("Vegan", isOn: $vegan)
                             Toggle("Halal-friendly", isOn: $halal)
-                            Toggle("Gluten-free", isOn: $glutenFree)
-                            Toggle("Dairy-free", isOn: $dairyFree)
 
                             HStack(alignment: .bottom, spacing: 8) {
                                 Text(diet.summaryMessage)
