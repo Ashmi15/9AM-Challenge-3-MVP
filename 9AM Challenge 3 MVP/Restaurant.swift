@@ -125,7 +125,9 @@ struct Restaurant: Identifiable, Hashable {
         latitude: Double,
         longitude: Double,
         isStale: Bool,
-        isHalalCertified: Bool = false
+        isHalalCertified: Bool = false,
+        dietClass: DietClass? = nil,
+        summary: String = ""
     ) {
         self.id = id
         self.name = name
@@ -139,6 +141,8 @@ struct Restaurant: Identifiable, Hashable {
         self.longitude = longitude
         self.isStale = isStale
         self.isHalalCertified = isHalalCertified
+        self.dietClass = dietClass
+        self.summary = summary
     }
 
     /// "Japanese • Tanjong Pagar"
@@ -360,12 +364,10 @@ enum RestaurantDirectory {
     ) -> [Restaurant] {
         guard !cravings.isEmpty else { return [] }
 
-        var candidates = restaurants(in: region)
-        let activePreferences = preferences.flatMap { $0.isEmpty ? nil : $0 }
-        if let activePreferences {
         // With Halal selected, only MUIS-verified establishments are eligible.
         var candidates = restaurants(in: region, halalOnly: preferences?.halal == true)
-        if let preferences, !preferences.isEmpty {
+        let activePreferences = preferences.flatMap { $0.isEmpty ? nil : $0 }
+        if let activePreferences {
             candidates = candidates.filter {
                 $0.dietAdherence(for: activePreferences).isRecommended
             }

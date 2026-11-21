@@ -462,20 +462,25 @@ struct OnboardingView: View {
 
     @ViewBuilder
     private func tutorialRow(_ icon: String, _ title: String, _ detail: String) -> some View {
-        HStack(alignment: .top, spacing: 12) {
-            Image(systemName: icon)
-                .font(.dynaPuff(20))
-                .foregroundStyle(.teal)
-                .frame(width: 30)
+        VStack(alignment: .leading, spacing: 3) {
+            HStack(alignment: .top, spacing: 0) {
+                Image(systemName: icon)
+                    .font(.system(size: 20))
+                    .foregroundStyle(.teal)
+                    .frame(width: 30, height: 26, alignment: .center)
 
-            VStack(alignment: .leading, spacing: 3) {
                 Text(title)
                     .font(.dynaPuff(15).weight(.semibold))
-                Text(detail)
-                    .font(.dynaPuff(13))
-                    .foregroundStyle(AppColor.secondaryText)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
+
+            Text(detail)
+                .font(.dynaPuff(13))
+                .foregroundStyle(AppColor.secondaryText)
+                .padding(.leading, 42)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 

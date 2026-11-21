@@ -305,9 +305,6 @@ extension RestaurantDirectory {
         let picks = weeklyPicks(for: region, halalOnly: useHalalDirectory)
         guard !preferences.isEmpty else { return picks }
 
-        let curatedIDs = Set(weeklyPicks(for: region).map(\.id))
-        let candidates = restaurants(in: region).filter {
-            $0.dietAdherence(for: preferences).isRecommended
         let safeDirectory = matchingDiet(
             restaurants(in: region, halalOnly: useHalalDirectory),
             using: preferences
@@ -319,18 +316,7 @@ extension RestaurantDirectory {
             result.append(restaurant)
             seenIDs.insert(restaurant.id)
         }
-
-        return candidates
-            .map { (restaurant: $0, score: $0.dietAdherence(for: preferences).score) }
-            .sorted { lhs, rhs in
-                if lhs.score != rhs.score { return lhs.score > rhs.score }
-                let lhsCurated = curatedIDs.contains(lhs.restaurant.id)
-                let rhsCurated = curatedIDs.contains(rhs.restaurant.id)
-                if lhsCurated != rhsCurated { return lhsCurated }
-                return lhs.restaurant.name.localizedCaseInsensitiveCompare(rhs.restaurant.name)
-                    == .orderedAscending
-            }
-            .map(\.restaurant)
+        return result
     }
 
 }
