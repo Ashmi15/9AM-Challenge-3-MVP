@@ -118,6 +118,33 @@ enum GoalKeywords {
         "dish", "meal", "cafe", "dining", "bakery", "dessert"
     ]
 
+    /// Largest target the app offers. Kept in step with the old stepper range so
+    /// saved goals and their difficulty bands stay consistent.
+    static let hardMaximumTarget = 50
+
+    /// Controlled building blocks for the guided editor. Every noun contains a
+    /// word the visit tracker recognises, so any combination is trackable.
+    static let goalVerbs = ["Try", "Explore", "Visit"]
+    static let goalNouns = [
+        "restaurants", "cuisines", "spots", "cafes", "places to eat", "desserts"
+    ]
+
+    private static let singularNouns: [String: String] = [
+        "restaurant": "restaurants",
+        "cuisine": "cuisines",
+        "spot": "spots",
+        "cafe": "cafes",
+        "place to eat": "places to eat",
+        "dessert": "desserts"
+    ]
+
+    /// Accepts the singular forms used by the older quick-add presets.
+    static func canonicalNoun(_ value: String) -> String? {
+        let key = value.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        if goalNouns.contains(key) { return key }
+        return singularNouns[key]
+    }
+
     static func isFoodRelated(_ title: String) -> Bool {
         let lowercased = title.lowercased()
         return foodKeywords.contains { lowercased.contains($0) }
@@ -126,6 +153,70 @@ enum GoalKeywords {
     /// Cuisine goals count distinct cuisine types, not restaurant visits.
     static func isCuisineRelated(_ title: String) -> Bool {
         title.lowercased().contains("cuisine")
+    }
+
+    /// Spots already spent on another quest can never pay this one.
+    private static var restaurantsLeft: Int {
+        let directoryIDs = Set(RestaurantDirectory.all.map(\.id))
+        let used = Set(RestaurantGoalCredits.all().map(\.restaurantID))
+            .intersection(directoryIDs)
+        return max(0, directoryIDs.count - used.count)
+    }
+
+    /// Distinct cuisines no quest has claimed yet, including credits written
+    /// by older builds that predate the cuisine key.
+    private static var cuisinesLeft: Int {
+        let directory = RestaurantDirectory.all
+        let used = Set(RestaurantGoalCredits.all().compactMap { credit -> String? in
+            if let cuisineKey = credit.cuisineKey {
+                return RestaurantGoalCredits.normalized(cuisineKey)
+            }
+            return directory.first { $0.id == credit.restaurantID }
+                .map { RestaurantGoalCredits.normalized($0.cuisine) }
+        })
+        return Set(directory.map { RestaurantGoalCredits.normalized($0.cuisine) })
+            .filter { !used.contains($0) }.count
+    }
+
+    /// Highest target that can still be completed with the remaining spots.
+    static func maximumTarget(for title: String) -> Int {
+        let available = isCuisineRelated(title) ? cuisinesLeft : restaurantsLeft
+        return min(hardMaximumTarget, available)
+    }
+
+    /// Nil means the goal can actually be completed by checking off visits.
+    static func validationMessage(for title: String, target: Int) -> String? {
+        let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return "Give your goal a short name." }
+
+        guard isFoodRelated(trimmed) else {
+            return "Include a food word such as restaurant, cuisine, spot, cafe or food so Munchkin can track it."
+        }
+
+        let cap = maximumTarget(for: trimmed)
+        guard target <= cap else {
+            let unit = isCuisineRelated(trimmed) ? "cuisines" : "restaurants"
+            return "Only \(cap) \(unit) left to count — lower the target."
+        }
+
+        if let countInTitle = targetNumber(in: trimmed) {
+            if countInTitle != target {
+                return "The title says \(countInTitle) but Target is \(target) — make them match."
+            }
+        } else if hasOutOfRangeNumber(in: trimmed) {
+            return "Use a number between 1 and \(hardMaximumTarget), or leave it out and set Target below."
+        }
+        return nil
+    }
+
+    private static func hasOutOfRangeNumber(in title: String) -> Bool {
+        guard let regex = try? NSRegularExpression(pattern: #"\b\d+\b"#) else { return false }
+        return regex.matches(in: title, range: NSRange(title.startIndex..., in: title))
+            .contains { match in
+                guard let range = Range(match.range, in: title),
+                      let value = Int(title[range]) else { return false }
+                return !(1...hardMaximumTarget).contains(value)
+            }
     }
 
     /// Reads a count from a goal title, e.g. "Try 5 new restaurants" -> 5.
@@ -425,11 +516,13 @@ struct GoalsView: View {
     }
 
     func presetGoal(title: String, target: Int) {
+        // Even the quick-add goals must fit what is left to count.
+        let safeTarget = max(1, min(target, GoalKeywords.maximumTarget(for: title)))
         goals.append(GoalItem(
             title: title,
-            target: target,
+            target: safeTarget,
             progress: 0,
-            difficulty: suggestedDifficulty(for: target)
+            difficulty: suggestedDifficulty(for: safeTarget)
         ))
         save()
     }
@@ -550,6 +643,40 @@ struct GoalEditor: Identifiable {
     }
 }
 
+/// A goal assembled from controlled parts. The noun always carries a
+/// recognised keyword, so every title this produces is completable.
+private struct GoalTemplate {
+    var verb: String
+    var count: Int
+    var noun: String
+
+    var title: String { "\(verb) \(count) new \(noun)" }
+
+    /// Recognises goals created from the presets so editing one keeps its
+    /// guided layout instead of dropping back to free text.
+    static func parse(_ title: String) -> GoalTemplate? {
+        let pattern = #"^\s*(try|explore|visit)\s+(\d{1,2})\s+new\s+(.+?)\s*$"#
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
+              let match = regex.firstMatch(
+                  in: title,
+                  range: NSRange(title.startIndex..., in: title)
+              ),
+              match.numberOfRanges == 4,
+              let verbRange = Range(match.range(at: 1), in: title),
+              let countRange = Range(match.range(at: 2), in: title),
+              let nounRange = Range(match.range(at: 3), in: title),
+              let count = Int(title[countRange]),
+              let noun = GoalKeywords.canonicalNoun(String(title[nounRange]))
+        else { return nil }
+
+        let rawVerb = String(title[verbRange])
+        let verb = GoalKeywords.goalVerbs.first {
+            $0.caseInsensitiveCompare(rawVerb) == .orderedSame
+        } ?? "Try"
+        return GoalTemplate(verb: verb, count: count, noun: noun)
+    }
+}
+
 private func suggestedDifficulty(for target: Int) -> String {
     switch target {
     case ...1: return "Easy"
@@ -567,40 +694,112 @@ private struct GoalEditorView: View {
 
     @State private var title: String
     @State private var target: Int
+    @State private var useTemplate: Bool
+    @State private var verb: String
+    @State private var noun: String
 
     init(editor: GoalEditor, onSave: @escaping (GoalItem) -> Void) {
         self.editor = editor
         self.onSave = onSave
+
+        let parsed = GoalTemplate.parse(editor.goal.title)
         _title = State(initialValue: editor.goal.title)
         _target = State(initialValue: editor.goal.target)
+        // New goals always start guided. Existing titles that already fit the
+        // pattern stay guided too; anything else keeps its text so it can be
+        // repaired using the inline validation below.
+        _useTemplate = State(initialValue: editor.isNew || parsed != nil)
+        _verb = State(initialValue: parsed?.verb ?? "Try")
+        _noun = State(initialValue: parsed?.noun ?? "restaurants")
     }
+
+    /// The title that will be saved, from whichever mode is active.
+    private var effectiveTitle: String {
+        useTemplate ? "\(verb) \(target) new \(noun)" : title
+    }
+
+    private var validationMessage: String? {
+        GoalKeywords.validationMessage(for: effectiveTitle, target: target)
+    }
+
+    private var canSave: Bool { validationMessage == nil }
 
     /// Difficulty is derived from the target, never chosen by the user.
     private var difficulty: String {
         suggestedDifficulty(for: target)
     }
 
-    private var canSave: Bool {
-        !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    /// Moving the target cannot drop below progress already made.
+    private var minTarget: Int {
+        max(1, editor.goal.progress)
+    }
+
+    /// Targets above the remaining spots can never be completed.
+    private var maxTarget: Int {
+        max(minTarget, GoalKeywords.maximumTarget(for: effectiveTitle))
     }
 
     var body: some View {
         NavigationStack {
             Form {
                 Section("Goal") {
-                    TextField("Goal title", text: $title)
-                        .onChange(of: title) { _, newTitle in
-                            if let detected = GoalKeywords.targetNumber(in: newTitle) {
-                                // A number in the title sets the target, and
-                                // difficulty follows from it automatically.
-                                target = max(detected, minTarget)
+                    if useTemplate {
+                        Picker("Start with", selection: $verb) {
+                            ForEach(GoalKeywords.goalVerbs, id: \.self) { word in
+                                Text(word).tag(word)
                             }
                         }
+                        Picker("How many", selection: $target) {
+                            ForEach(minTarget...maxTarget, id: \.self) { number in
+                                Text("\(number)").tag(number)
+                            }
+                        }
+                        Picker("Kind of place", selection: $noun) {
+                            ForEach(GoalKeywords.goalNouns, id: \.self) { value in
+                                Text(value).tag(value)
+                            }
+                        }
+                        .onChange(of: noun) { _, newValue in
+                            clampTarget(verb: verb, noun: newValue)
+                        }
 
-                    Stepper("Target: \(target)", value: $target, in: minTarget...50)
+                        Text(effectiveTitle)
+                            .font(.dynaPuff(17).weight(.semibold))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.vertical, 2)
+                    } else {
+                        TextField("Goal title", text: $title)
+                            .onChange(of: title) { _, newTitle in
+                                if let detected = GoalKeywords.targetNumber(in: newTitle) {
+                                    // A number in the title sets the target, and
+                                    // difficulty follows from it automatically.
+                                    target = max(detected, minTarget)
+                                }
+                            }
+
+                        Stepper("Target: \(target)", value: $target, in: minTarget...maxTarget)
+                    }
 
                     LabeledContent("Difficulty", value: difficulty)
                         .foregroundStyle(AppColor.secondaryText)
+
+                    if let message = validationMessage {
+                        Label(message, systemImage: "exclamationmark.triangle.fill")
+                            .font(.dynaPuff(13))
+                            .foregroundStyle(.orange)
+                    } else {
+                        Label(
+                            "Looks good — Munchkin can track this goal.",
+                            systemImage: "checkmark.circle.fill"
+                        )
+                        .font(.dynaPuff(13))
+                        .foregroundStyle(.green)
+                    }
+
+                    Button(useTemplate ? "Write a custom title instead" : "Use the guided format") {
+                        switchMode()
+                    }
+                    .font(.dynaPuff(13))
                 }
 
                 Section {
@@ -615,7 +814,7 @@ private struct GoalEditorView: View {
                             .foregroundStyle(AppColor.secondaryText)
                     }
 
-                    if GoalKeywords.isFoodRelated(title) {
+                    if GoalKeywords.isFoodRelated(effectiveTitle) {
                         Label(
                             "This goal also updates when you mark a restaurant as visited.",
                             systemImage: "fork.knife"
@@ -624,6 +823,14 @@ private struct GoalEditorView: View {
                         .foregroundStyle(AppColor.secondaryText)
                     }
 
+                    if GoalKeywords.isCuisineRelated(effectiveTitle) {
+                        Label(
+                            "Cuisine goals need a different cuisine each time.",
+                            systemImage: "fork.knife"
+                        )
+                        .font(.dynaPuff(13))
+                        .foregroundStyle(AppColor.secondaryText)
+                    }
                 }
             }
             .navigationTitle(editor.isNew ? "New Goal" : "Edit Goal")
@@ -641,16 +848,42 @@ private struct GoalEditorView: View {
         }
     }
 
-    /// Moving the target cannot drop below progress already made.
-    private var minTarget: Int {
-        max(1, editor.goal.progress)
+    /// Switching to a cuisine goal can lower the ceiling below the current
+    /// count, so pull it back into the selectable range.
+    private func clampTarget(verb newVerb: String, noun newNoun: String) {
+        let cap = max(
+            minTarget,
+            GoalKeywords.maximumTarget(for: "\(newVerb) \(target) new \(newNoun)")
+        )
+        if target > cap { target = cap }
+    }
+
+    private func switchMode() {
+        if useTemplate {
+            title = effectiveTitle
+            useTemplate = false
+            return
+        }
+
+        let parsed = GoalTemplate.parse(title)
+        let newVerb = parsed?.verb ?? "Try"
+        let newNoun = parsed?.noun ?? "restaurants"
+        let newCount = parsed?.count ?? target
+        let cap = max(
+            minTarget,
+            GoalKeywords.maximumTarget(for: "\(newVerb) \(newCount) new \(newNoun)")
+        )
+        verb = newVerb
+        noun = newNoun
+        target = min(newCount, cap)
+        useTemplate = true
     }
 
     private func save() {
         guard canSave else { return }
 
         var updated = editor.goal
-        updated.title = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        updated.title = effectiveTitle.trimmingCharacters(in: .whitespacesAndNewlines)
         updated.target = target
         updated.difficulty = difficulty
         // Progress, completion date and claim state are intentionally left
