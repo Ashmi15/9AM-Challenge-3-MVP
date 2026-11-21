@@ -47,11 +47,6 @@ struct HomeView: View {
                                 Text(personaSnapshot.persona.tagline)
                                     .font(.dynaPuff(15))
                                     .foregroundStyle(AppColor.secondaryText)
-
-                                Text(personaSnapshot.explanation)
-                                    .font(.dynaPuff(13))
-                                    .foregroundStyle(AppColor.secondaryText)
-                                    .italic()
                             }
 
                             Spacer()

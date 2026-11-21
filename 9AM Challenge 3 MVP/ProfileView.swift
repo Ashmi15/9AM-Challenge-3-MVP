@@ -71,36 +71,35 @@ struct ProfileView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
 
                     // MARK: Food Persona (changes with your reviews)
-                    HStack(spacing: 15) {
-                        MunchkinAvatarView(persona: personaSnapshot.persona, size: 65)
-                            .frame(width: 120, height: 120)
-                            .background(personaSnapshot.persona.accent)
-                            .clipShape(Circle())
+                    VStack(alignment: .leading, spacing: 15) {
+                        HStack {
+                            Text("Your Food Persona")
+                                .font(.dynaPuff(17))
 
-                        VStack(alignment: .leading, spacing: 6) {
-                            HStack {
-                                Text("My Food Persona")
-                                    .font(.dynaPuff(17))
+                            Spacer()
 
-                                Spacer()
+                            Text("\(personaSnapshot.reviewCount) \(personaSnapshot.reviewCount == 1 ? "rating" : "ratings")")
+                                .font(.dynaPuff(13))
+                                .foregroundStyle(AppColor.secondaryText)
+                        }
 
-                                Text("\(personaSnapshot.reviewCount) \(personaSnapshot.reviewCount == 1 ? "rating" : "ratings")")
-                                    .font(.dynaPuff(13))
+                        HStack(spacing: 15) {
+                            MunchkinAvatarView(persona: personaSnapshot.persona, size: 65)
+                                .frame(width: 120, height: 120)
+                                .background(personaSnapshot.persona.accent)
+                                .clipShape(Circle())
+
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text(personaSnapshot.persona.name)
+                                    .font(.dynaPuff(20))
+                                    .fontWeight(.medium)
+
+                                Text(personaSnapshot.persona.tagline)
+                                    .font(.dynaPuff(15))
                                     .foregroundStyle(AppColor.secondaryText)
                             }
 
-                            Text(personaSnapshot.persona.name)
-                                .font(.dynaPuff(20))
-                                .fontWeight(.bold)
-
-                            Text(personaSnapshot.persona.tagline)
-                                .font(.dynaPuff(13))
-                                .foregroundStyle(AppColor.secondaryText)
-
-                            Text(personaSnapshot.explanation)
-                                .font(.dynaPuff(13))
-                                .foregroundStyle(AppColor.secondaryText)
-                                .italic()
+                            Spacer()
                         }
                     }
                     .padding(20)
