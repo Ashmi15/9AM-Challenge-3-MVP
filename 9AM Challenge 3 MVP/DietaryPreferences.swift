@@ -166,7 +166,10 @@ extension Restaurant {
         var conflicting: [DietaryRestriction] = []
 
         for restriction in preferences.active {
-            if restriction.positive.contains(where: { searchableText.contains($0) }) {
+            // Halal status comes from the bundled MUIS list, not name guessing.
+            if restriction.key == "dietHalal" && isHalalCertified {
+                matched.append(restriction)
+            } else if restriction.positive.contains(where: { searchableText.contains($0) }) {
                 matched.append(restriction)
             } else if restriction.negative.contains(where: { searchableText.contains($0) }) {
                 conflicting.append(restriction)
@@ -206,16 +209,21 @@ extension RestaurantDirectory {
         return restaurants.filter { $0.dietAdherence(for: preferences).adheresToAll }
     }
 
-    /// Weekly picks that honour every restriction. Curated picks come first,
-    /// then the rest of the directory so no matching restaurant is overlooked.
+    /// Weekly picks that honour every restriction. When Halal is selected the
+    /// curated pool comes from the verified MUIS directory instead of OSM.
     static func dietAwareWeeklyPicks(
         for region: RestaurantRegion,
         using preferences: DietaryPreferences
     ) -> [Restaurant] {
-        guard !preferences.isEmpty else { return weeklyPicks(for: region) }
+        let useHalalDirectory = preferences.halal
+        let picks = weeklyPicks(for: region, halalOnly: useHalalDirectory)
+        guard !preferences.isEmpty else { return picks }
 
-        let safeDirectory = matchingDiet(restaurants(in: region), using: preferences)
-        var result = matchingDiet(weeklyPicks(for: region), using: preferences)
+        let safeDirectory = matchingDiet(
+            restaurants(in: region, halalOnly: useHalalDirectory),
+            using: preferences
+        )
+        var result = matchingDiet(picks, using: preferences)
         var seenIDs = Set(result.map(\.id))
 
         for restaurant in safeDirectory where !seenIDs.contains(restaurant.id) {

@@ -249,7 +249,13 @@ struct ProfileView: View {
 
                             Toggle("Vegetarian", isOn: $vegetarian)
                             Toggle("Vegan", isOn: $vegan)
-                            Toggle("Halal-friendly", isOn: $halal)
+                            Toggle("Halal-certified", isOn: $halal)
+
+                            if halal {
+                                Text("Only restaurants in the directory that are halal will be shown.")
+                                    .font(.dynaPuff(12))
+                                    .foregroundStyle(.secondary)
+                            }
 
                             HStack(alignment: .bottom, spacing: 8) {
                                 Text(diet.summaryMessage)

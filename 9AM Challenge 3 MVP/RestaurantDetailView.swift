@@ -87,6 +87,12 @@ struct RestaurantDetailView: View {
                         .font(.dynaPuff(15))
                         .foregroundStyle(.secondary)
 
+                    if restaurant.isHalalCertified {
+                        Text("MUIS halal certified")
+                            .font(.dynaPuff(13).weight(.semibold))
+                            .foregroundStyle(.secondary)
+                    }
+
                     MunchkinDietMessage(
                         adherence: restaurant.dietAdherence(for: diet)
                     )

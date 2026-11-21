@@ -59,7 +59,7 @@ struct MunchieMixerView: View {
                     // MARK: Craving Selection
                     Text("Choose your cravings!")
                         .font(.dynaPuff(20))
-                        .fontWeight(.bold)
+                        .fontWeight(.medium)
 
                     LazyVGrid(
                         columns: [
@@ -126,7 +126,7 @@ struct MunchieMixerView: View {
 
                         Text("Your Mixing Bowl")
                             .font(.dynaPuff(20))
-                            .fontWeight(.bold)
+                            .fontWeight(.medium)
 
                         ZStack {
 

@@ -29,7 +29,8 @@ struct AllRestaurantsView: View {
     }
 
     private var restaurants: [Restaurant] {
-        var list = RestaurantDirectory.all
+        // Halal preference switches to the bundled MUIS-verified directory.
+        var list = halal ? RestaurantDirectory.verifiedHalal : RestaurantDirectory.all
 
         if !region.isAnywhere {
             list = list.filter { $0.region == region }
@@ -45,6 +46,8 @@ struct AllRestaurantsView: View {
                 restaurant.name.localizedCaseInsensitiveContains(query)
                     || restaurant.cuisine.localizedCaseInsensitiveContains(query)
                     || restaurant.area.localizedCaseInsensitiveContains(query)
+                    || restaurant.address.localizedCaseInsensitiveContains(query)
+                    || restaurant.postcode.contains(query)
             }
         }
 
@@ -90,6 +93,13 @@ struct AllRestaurantsView: View {
                         .font(.dynaPuff(15))
                         .tint(.teal)
                         .padding(.horizontal, 4)
+                }
+
+                if halal {
+                    Text("Halal spots from the restaurant directory")
+                        .font(.dynaPuff(12))
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
 
                 Text("\(restaurants.count) \(restaurants.count == 1 ? "restaurant" : "restaurants")")
