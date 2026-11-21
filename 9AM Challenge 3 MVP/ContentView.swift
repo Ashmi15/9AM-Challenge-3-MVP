@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ContentView: View {
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
+    @AppStorage(AppAppearance.storageKey) private var appearanceMode = AppAppearance.device
 
     var body: some View {
         TabView {
@@ -28,6 +29,7 @@ struct ContentView: View {
                 ProfileView()
             }
         }
+        .preferredColorScheme(AppAppearance.colorScheme(for: appearanceMode))
         .fullScreenCover(
             isPresented: Binding(
                 get: { !hasCompletedOnboarding },

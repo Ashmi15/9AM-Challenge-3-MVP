@@ -19,7 +19,7 @@ struct HomeView: View {
                 VStack {
                     Text("Are you ready for your next food adventure?")
                         .font(.dynaPuff(15))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppColor.secondaryText)
                         .bold()
                         .multilineTextAlignment(.leading)
                         .frame(width: 375, alignment: .leading)
@@ -33,7 +33,7 @@ struct HomeView: View {
 
                             Text("\(personaSnapshot.reviewCount) \(personaSnapshot.reviewCount == 1 ? "rating" : "ratings")")
                                 .font(.dynaPuff(13))
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(AppColor.secondaryText)
                         }
 
                         HStack(spacing: 15) {
@@ -46,11 +46,11 @@ struct HomeView: View {
 
                                 Text(personaSnapshot.persona.tagline)
                                     .font(.dynaPuff(15))
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(AppColor.secondaryText)
 
                                 Text(personaSnapshot.explanation)
                                     .font(.dynaPuff(13))
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(AppColor.secondaryText)
                                     .italic()
                             }
 
@@ -74,7 +74,7 @@ struct HomeView: View {
 
                                 Text("No active goals.\nSet some in the Goals tab.")
                                     .font(.dynaPuff(13))
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(AppColor.secondaryText)
                                     .multilineTextAlignment(.center)
                             }
                             .frame(maxWidth: .infinity, minHeight: 70)
@@ -123,12 +123,12 @@ struct HomeView: View {
                     }
                     .padding(20)
                     .frame(width: 375)
-                    .background(Color(red: 0.90, green: 0.89, blue: 0.97))
+                    .background(AppColor.lavender)
                     .clipShape(RoundedRectangle(cornerRadius: 20))
 
                     WeeklyRecommendationsSection()
                         .padding(20)
-                        .background(Color(red: 1.0, green: 0.93, blue: 0.79))
+                        .background(AppColor.peach)
                         .clipShape(RoundedRectangle(cornerRadius: 20))
                         .frame(width: 375)
                 }

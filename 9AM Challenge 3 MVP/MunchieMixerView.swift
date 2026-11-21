@@ -25,11 +25,7 @@ struct MunchieMixerView: View {
 
     @Namespace private var mixingAnimation
 
-    private let backgroundColor = Color(
-        red: 1.0,
-        green: 0.97,
-        blue: 0.93
-    )
+    private let backgroundColor = AppColor.background
 
     var body: some View {
         NavigationStack {
@@ -39,7 +35,7 @@ struct MunchieMixerView: View {
                     // MARK: Subtitle
                     Text("Mix your cravings, find your munch!")
                         .font(.dynaPuff(15))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppColor.secondaryText)
                         .multilineTextAlignment(.leading)
                         .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -50,7 +46,7 @@ struct MunchieMixerView: View {
                         Text("What would you like to eat today?")
                             .font(.dynaPuff(17))
                             .padding(15)
-                            .background(Color.white)
+                            .background(AppColor.card)
                             .clipShape(
                                 RoundedRectangle(cornerRadius: 20)
                             )
@@ -104,14 +100,14 @@ struct MunchieMixerView: View {
                                     Text(craving.name)
                                         .font(.dynaPuff(15))
                                         .fontWeight(.medium)
-                                        .foregroundStyle(.black)
+                                        .foregroundStyle(.primary)
                                 }
                                 .frame(maxWidth: .infinity)
                                 .frame(height: 100)
                                 .background(
                                     isSelected
                                         ? Color.orange.opacity(0.2)
-                                        : Color.white
+                                        : AppColor.card
                                 )
                                 .clipShape(
                                     RoundedRectangle(cornerRadius: 20)
@@ -165,7 +161,7 @@ struct MunchieMixerView: View {
                             : "\(selectedCravings.count) cravings added!"
                         )
                         .font(.dynaPuff(13))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppColor.secondaryText)
                     }
 
                     // MARK: Mix Button

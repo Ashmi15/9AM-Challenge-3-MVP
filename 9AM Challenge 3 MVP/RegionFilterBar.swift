@@ -37,10 +37,10 @@ struct RegionFilterBar: View {
                         .foregroundStyle(
                             isSelected
                                 ? Color.white
-                                : Color(red: 0.75, green: 0.38, blue: 0.05)
+                                : AppColor.filterText
                         )
                         .background(
-                            isSelected ? Color.orange : Color.white
+                            isSelected ? Color.orange : AppColor.card
                         )
                         .clipShape(Capsule())
                         .overlay(
@@ -61,5 +61,5 @@ struct RegionFilterBar: View {
 #Preview {
     RegionFilterBar(selection: .constant("Central"))
         .padding()
-        .background(Color(red: 1.0, green: 0.97, blue: 0.93))
+        .background(AppColor.background)
 }

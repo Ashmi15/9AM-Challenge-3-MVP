@@ -54,7 +54,7 @@ struct MixerResultsView: View {
 
                 Text("Based on your cravings: \(selectedCravings.joined(separator: ", "))")
                     .font(.dynaPuff(15))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(AppColor.secondaryText)
 
                 RegionFilterBar(selection: $preferredLocation)
 
@@ -99,7 +99,7 @@ struct MixerResultsView: View {
                         }
                     }
                     .padding(12)
-                    .background(Color.white)
+                    .background(AppColor.card)
                     .clipShape(
                         RoundedRectangle(cornerRadius: 20)
                     )
@@ -108,7 +108,7 @@ struct MixerResultsView: View {
             .padding(20)
         }
         .background(
-            Color(red: 1.0, green: 0.97, blue: 0.93)
+            AppColor.background
         )
     }
 

@@ -183,9 +183,9 @@ struct ShopView: View {
     @AppStorage("shop_owned_v1") private var ownedRaw = ""
     @AppStorage("shop_equipped_v1") private var equippedRaw = ""
 
-    private let backgroundColor = Color(red: 1.0, green: 0.97, blue: 0.93)
-    private let mintColor = Color(red: 0.65, green: 0.89, blue: 0.75)
-    private let deepGreen = Color(red: 0.2, green: 0.45, blue: 0.35)
+    private let backgroundColor = AppColor.background
+    private let mintColor = AppColor.shopMint
+    private let deepGreen = AppColor.greenInk
 
     private let itemColumns = [
         GridItem(.flexible(), spacing: 12),
@@ -263,7 +263,7 @@ struct ShopView: View {
     private var subtitle: some View {
         Text("Spend your goal coins on a new look!")
             .font(.dynaPuff(15))
-            .foregroundStyle(.secondary)
+            .foregroundStyle(AppColor.secondaryText)
             .frame(maxWidth: .infinity, alignment: .leading)
     }
 
@@ -277,7 +277,7 @@ struct ShopView: View {
 
             Text("Tap an accessory to buy, wear or sell it.")
                 .font(.dynaPuff(13))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppColor.secondaryText)
 
             LazyVGrid(columns: itemColumns, spacing: 12) {
                 ForEach(ShopCatalogue.items) { item in
@@ -287,7 +287,7 @@ struct ShopView: View {
 
             Label("Complete goals to earn more coins.", systemImage: "target")
                 .font(.dynaPuff(13))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppColor.secondaryText)
                 .padding(.top, 4)
         }
     }
@@ -310,7 +310,7 @@ struct ShopView: View {
 
                 Text(owned || unlocked ? item.name : "Mystery item")
                     .font(.dynaPuff(15).weight(.semibold))
-                    .foregroundStyle(owned || unlocked ? Color.primary : .secondary)
+                    .foregroundStyle(owned || unlocked ? Color.primary : AppColor.secondaryText)
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
 
@@ -326,7 +326,7 @@ struct ShopView: View {
                     } else {
                         Text("💰 \(item.price)")
                             .font(.dynaPuff(13).weight(.bold))
-                            .foregroundStyle(affordable ? Color.white : Color.black.opacity(0.35))
+                            .foregroundStyle(affordable ? Color.white : AppColor.mutedInk)
                             .padding(.horizontal, 14)
                             .padding(.vertical, 6)
                             .background(affordable ? Color.orange : Color.black.opacity(0.12))
@@ -347,14 +347,14 @@ struct ShopView: View {
 
     private func tileColor(for item: ShopAccessory, unlocked: Bool, owned: Bool) -> Color {
         guard unlocked || owned else {
-            return Color(red: 0.89, green: 0.87, blue: 0.84)
+            return AppColor.shopLockedTile
         }
 
         switch item.category {
-        case .head: return Color(red: 0.98, green: 0.82, blue: 0.78)
-        case .face: return Color(red: 0.78, green: 0.93, blue: 0.84)
-        case .neck: return Color(red: 1.0, green: 0.92, blue: 0.72)
-        case .extra: return Color(red: 0.90, green: 0.85, blue: 0.97)
+        case .head: return AppColor.shopHeadTile
+        case .face: return AppColor.shopFaceTile
+        case .neck: return AppColor.shopNeckTile
+        case .extra: return AppColor.shopExtraTile
         }
     }
 
@@ -374,12 +374,12 @@ struct ShopView: View {
 
                     Text("Head to Buy and grab something cute for your munchkin.")
                         .font(.dynaPuff(13))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppColor.secondaryText)
                         .multilineTextAlignment(.center)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(24)
-                .background(Color.white)
+                .background(AppColor.card)
                 .clipShape(RoundedRectangle(cornerRadius: 20))
             } else {
                 ForEach(AccessoryCategory.allCases) { category in
@@ -398,7 +398,7 @@ struct ShopView: View {
                         }
                         .padding(16)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color.white)
+                        .background(AppColor.card)
                         .clipShape(RoundedRectangle(cornerRadius: 20))
                     }
                 }
@@ -421,7 +421,7 @@ struct ShopView: View {
 
             ZStack {
                 Circle()
-                    .fill(Color.white.opacity(0.55))
+                    .fill(Color.white.opacity(0.20))
                     .frame(width: 200, height: 200)
 
                 MunchkinAvatarView(size: 115)
@@ -447,7 +447,7 @@ struct ShopView: View {
                         .foregroundStyle(Color.white)
                         .padding(.horizontal, 14)
                         .padding(.vertical, 8)
-                        .background(deepGreen)
+                        .background(AppColor.buttonGreen)
                         .clipShape(Capsule())
                 }
                 .buttonStyle(.plain)
@@ -595,8 +595,8 @@ private struct AccessoryDetailSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var showSellConfirmation = false
 
-    private let deepGreen = Color(red: 0.2, green: 0.45, blue: 0.35)
-    private let cream = Color(red: 1.0, green: 0.97, blue: 0.93)
+    private let deepGreen = AppColor.greenInk
+    private let cream = AppColor.background
 
     var body: some View {
         VStack(spacing: 18) {
@@ -617,7 +617,7 @@ private struct AccessoryDetailSheet: View {
 
                 Text(item.about)
                     .font(.dynaPuff(15))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(AppColor.secondaryText)
                     .multilineTextAlignment(.center)
                     .padding(.top, 12)
             }
@@ -677,7 +677,7 @@ private struct AccessoryDetailSheet: View {
         } else if !unlocked {
             Text("Own \(item.unlockRequirement) accessories to reveal this one.")
                 .font(.dynaPuff(13))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppColor.secondaryText)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)

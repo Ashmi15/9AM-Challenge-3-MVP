@@ -28,6 +28,7 @@ struct ProfileView: View {
 
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = true
     @AppStorage("goal_currency_v1") private var coins = 0
+    @AppStorage(AppAppearance.storageKey) private var appearanceMode = AppAppearance.device
 
     @State private var personaSnapshot = FoodPersonaStore.resolve()
 
@@ -55,11 +56,7 @@ struct ProfileView: View {
         "$50+"
     ]
 
-    private let backgroundColor = Color(
-        red: 0.95,
-        green: 0.98,
-        blue: 0.96
-    )
+    private let backgroundColor = AppColor.profileBackground
 
     var body: some View {
         NavigationStack {
@@ -69,7 +66,7 @@ struct ProfileView: View {
                     // MARK: Profile Header
                     Text("Your food adventure, your rules!")
                         .font(.dynaPuff(15))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppColor.secondaryText)
                         .multilineTextAlignment(.leading)
                         .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -89,7 +86,7 @@ struct ProfileView: View {
 
                                 Text("\(personaSnapshot.reviewCount) \(personaSnapshot.reviewCount == 1 ? "rating" : "ratings")")
                                     .font(.dynaPuff(13))
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(AppColor.secondaryText)
                             }
 
                             Text(personaSnapshot.persona.name)
@@ -98,16 +95,16 @@ struct ProfileView: View {
 
                             Text(personaSnapshot.persona.tagline)
                                 .font(.dynaPuff(13))
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(AppColor.secondaryText)
 
                             Text(personaSnapshot.explanation)
                                 .font(.dynaPuff(13))
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(AppColor.secondaryText)
                                 .italic()
                         }
                     }
                     .padding(20)
-                    .background(.white)
+                    .background(AppColor.card)
                     .clipShape(
                         RoundedRectangle(cornerRadius: 20)
                     )
@@ -126,7 +123,7 @@ struct ProfileView: View {
 
                                 Text("Changes automatically as I rate places.")
                                     .font(.dynaPuff(13))
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(AppColor.secondaryText)
                             }
 
                             Spacer()
@@ -148,7 +145,7 @@ struct ProfileView: View {
                     }
                     .padding(20)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(.white)
+                    .background(AppColor.card)
                     .clipShape(RoundedRectangle(cornerRadius: 20))
 
                     // MARK: Shop (moved here from its own tab)
@@ -167,7 +164,7 @@ struct ProfileView: View {
 
                                 Text("Dress up your pet with the coins you earn.")
                                     .font(.dynaPuff(13))
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(AppColor.secondaryText)
                             }
 
                             Spacer()
@@ -178,10 +175,10 @@ struct ProfileView: View {
 
                             Image(systemName: "chevron.right")
                                 .font(.dynaPuff(13))
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(AppColor.secondaryText)
                         }
                         .padding(20)
-                        .background(.white)
+                        .background(AppColor.card)
                         .clipShape(RoundedRectangle(cornerRadius: 20))
                     }
                     .buttonStyle(.plain)
@@ -213,7 +210,7 @@ struct ProfileView: View {
 
                             Text("Your weekly picks and Munchie Mixer results will focus on this region.")
                                 .font(.dynaPuff(13))
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(AppColor.secondaryText)
                         }
 
                         Divider()
@@ -254,14 +251,14 @@ struct ProfileView: View {
                             if halal {
                                 Text("Only restaurants in the directory that are halal will be shown.")
                                     .font(.dynaPuff(12))
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(AppColor.secondaryText)
                             }
 
                             HStack(alignment: .bottom, spacing: 8) {
                                 Text(diet.summaryMessage)
                                     .font(.dynaPuff(13))
                                     .padding(10)
-                                    .background(Color.mint.opacity(0.2))
+                                    .background(AppColor.mintPanel)
                                     .clipShape(RoundedRectangle(cornerRadius: 14))
 
                                 MunchkinAvatarView(persona: personaSnapshot.persona, size: 32)
@@ -270,9 +267,30 @@ struct ProfileView: View {
                         }
                         .tint(.teal)
 
+                        Divider()
+
+                        // Appearance
+                        VStack(alignment: .leading, spacing: 8) {
+                            Label(
+                                "Appearance",
+                                systemImage: "moon.circle.fill"
+                            )
+                            .font(.dynaPuff(17))
+
+                            Picker(
+                                "Appearance",
+                                selection: $appearanceMode
+                            ) {
+                                ForEach(AppAppearance.options, id: \.self) { mode in
+                                    Text(AppAppearance.label(for: mode)).tag(mode)
+                                }
+                            }
+                            .tint(.teal)
+                        }
+
                     }
                     .padding(20)
-                    .background(.white)
+                    .background(AppColor.card)
                     .clipShape(
                         RoundedRectangle(cornerRadius: 20)
                     )
@@ -283,14 +301,12 @@ struct ProfileView: View {
 
                         Text("The better I know your tastes, the yummier your recommendations!")
                             .font(.dynaPuff(15))
-                            .foregroundStyle(
-                                Color(red: 0.2, green: 0.45, blue: 0.35)
-                            )
+                            .foregroundStyle(AppColor.greenInk)
 
                         Spacer()
                     }
                     .padding(18)
-                    .background(Color.mint.opacity(0.2))
+                    .background(AppColor.mintPanel)
                     .clipShape(
                         RoundedRectangle(cornerRadius: 20)
                     )

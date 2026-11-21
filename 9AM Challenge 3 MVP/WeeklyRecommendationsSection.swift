@@ -88,7 +88,7 @@ struct WeeklyRecommendationsSection: View {
                      ? "No picks in this region yet. Try another region."
                      : "No spots here match all your dietary needs. Try another region or relax a restriction.")
                     .font(.dynaPuff(13))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(AppColor.secondaryText)
                     .frame(maxWidth: .infinity, minHeight: 60)
             } else {
                 ForEach(restaurants) { restaurant in

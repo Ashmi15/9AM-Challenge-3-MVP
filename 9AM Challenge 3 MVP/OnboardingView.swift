@@ -58,7 +58,7 @@ struct OnboardingView: View {
 
                 Text("Step \(step.rawValue + 1) of \(Step.allCases.count)")
                     .font(.dynaPuff(13))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(AppColor.secondaryText)
             }
             .padding(.horizontal, 24)
             .padding(.top, 10)
@@ -103,7 +103,7 @@ struct OnboardingView: View {
             }
             .padding(20)
         }
-        .background(Color(red: 1.0, green: 0.97, blue: 0.93).ignoresSafeArea())
+        .background(AppColor.background.ignoresSafeArea())
     }
 
     // MARK: Navigation
@@ -158,7 +158,7 @@ struct OnboardingView: View {
 
             Text("Your pocket food guide for Singapore. Tell us what you love and we'll find the good stuff.")
                 .font(.dynaPuff(15))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppColor.secondaryText)
                 .multilineTextAlignment(.center)
 
             VStack(alignment: .leading, spacing: 18) {
@@ -179,7 +179,7 @@ struct OnboardingView: View {
                 )
             }
             .padding(20)
-            .background(.white)
+            .background(AppColor.card)
             .clipShape(RoundedRectangle(cornerRadius: 22))
         }
         .frame(maxWidth: .infinity)
@@ -192,7 +192,7 @@ struct OnboardingView: View {
 
             Text("Five tabs, one very well-fed pet.")
                 .font(.dynaPuff(15))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppColor.secondaryText)
 
             VStack(spacing: 14) {
                 tutorialRow(
@@ -222,12 +222,12 @@ struct OnboardingView: View {
                 )
             }
             .padding(20)
-            .background(.white)
+            .background(AppColor.card)
             .clipShape(RoundedRectangle(cornerRadius: 22))
 
             Text("After a meal, leave a rating and review in any restaurant — that's how your pet learns what you love!")
                 .font(.dynaPuff(13))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppColor.secondaryText)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -239,7 +239,7 @@ struct OnboardingView: View {
 
             Text("Two quick questions and I'll pick the Munchkin that fits you best.")
                 .font(.dynaPuff(15))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppColor.secondaryText)
 
             VStack(alignment: .leading, spacing: 14) {
                 VStack(alignment: .leading, spacing: 10) {
@@ -248,7 +248,7 @@ struct OnboardingView: View {
 
                     Text("Pick as many as you like.")
                         .font(.dynaPuff(13))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppColor.secondaryText)
 
                     LazyVGrid(columns: answerColumns, spacing: 10) {
                         ForEach(PetQuestionnaire.flavours) { option in
@@ -262,7 +262,7 @@ struct OnboardingView: View {
                     }
                 }
                 .padding(18)
-                .background(.white)
+                .background(AppColor.card)
                 .clipShape(RoundedRectangle(cornerRadius: 20))
 
                 VStack(alignment: .leading, spacing: 10) {
@@ -281,7 +281,7 @@ struct OnboardingView: View {
                     }
                 }
                 .padding(18)
-                .background(.white)
+                .background(AppColor.card)
                 .clipShape(RoundedRectangle(cornerRadius: 20))
             }
         }
@@ -306,12 +306,12 @@ struct OnboardingView: View {
 
                 Text(recommendation.persona.tagline)
                     .font(.dynaPuff(15))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(AppColor.secondaryText)
                     .multilineTextAlignment(.center)
 
                 Text(recommendation.explanation)
                     .font(.dynaPuff(13))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(AppColor.secondaryText)
                     .multilineTextAlignment(.center)
 
                 Text("Rate a few restaurants and I'll change to match your reviews.")
@@ -321,7 +321,7 @@ struct OnboardingView: View {
             }
             .padding(24)
             .frame(maxWidth: .infinity)
-            .background(.white)
+            .background(AppColor.card)
             .clipShape(RoundedRectangle(cornerRadius: 24))
 
             Button {
@@ -393,12 +393,12 @@ struct OnboardingView: View {
                 .tint(.teal)
             }
             .padding(20)
-            .background(.white)
+            .background(AppColor.card)
             .clipShape(RoundedRectangle(cornerRadius: 22))
 
             Text("Don't worry — you can change all of this later in Profile.")
                 .font(.dynaPuff(13))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppColor.secondaryText)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -455,7 +455,7 @@ struct OnboardingView: View {
                     .font(.dynaPuff(15).weight(.semibold))
                 Text(detail)
                     .font(.dynaPuff(13))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(AppColor.secondaryText)
             }
         }
     }
@@ -473,7 +473,7 @@ struct OnboardingView: View {
                     .font(.dynaPuff(15).weight(.semibold))
                 Text(detail)
                     .font(.dynaPuff(13))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(AppColor.secondaryText)
             }
         }
     }

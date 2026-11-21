@@ -69,11 +69,11 @@ enum FoodPersona: String, CaseIterable, Identifiable {
 
     var accent: Color {
         switch self {
-        case .munchkin: return Color(red: 0.95, green: 0.75, blue: 0.73)
-        case .cookie: return Color(red: 1.0, green: 0.90, blue: 0.72)
-        case .fiery: return Color(red: 1.0, green: 0.79, blue: 0.68)
-        case .panda: return Color(red: 1.0, green: 0.93, blue: 0.70)
-        case .terry: return Color(red: 0.82, green: 0.88, blue: 0.99)
+        case .munchkin: return AppColor.personaMunchkin
+        case .cookie: return AppColor.personaCookie
+        case .fiery: return AppColor.personaFiery
+        case .panda: return AppColor.personaPanda
+        case .terry: return AppColor.personaTerry
         }
     }
 

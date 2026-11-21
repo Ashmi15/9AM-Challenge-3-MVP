@@ -31,7 +31,7 @@ struct GoalProgressRow: View {
 
                 Text("\(progress)/\(total)")
                     .font(.dynaPuff(13))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(AppColor.secondaryText)
             }
 
             ProgressView(

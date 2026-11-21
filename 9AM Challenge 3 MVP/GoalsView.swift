@@ -162,8 +162,8 @@ struct GoalsView: View {
     @State private var editor: GoalEditor?
     @State private var clearPrompt: ClearPrompt?
 
-    private let backgroundColor = Color(red: 1.0, green: 0.97, blue: 0.93)
-    private let cardColor = Color.white
+    private let backgroundColor = AppColor.background
+    private let cardColor = AppColor.card
 
     /// Completed goals that still owe coins. Kept at the top of the list so
     /// they are impossible to miss.
@@ -234,7 +234,7 @@ struct GoalsView: View {
                             ? "No active goals. Add one below."
                             : "Nothing in progress. Add another goal below."
                     )
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(AppColor.secondaryText)
                     .rowStyling()
                 } else {
                     ForEach(activeGoals) { g in
@@ -253,7 +253,7 @@ struct GoalsView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Quick add")
                         .font(.dynaPuff(15))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppColor.secondaryText)
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack {
                             Button("Try 3 new restaurants") { presetGoal(title: "Try 3 new restaurants", target: 3) }
@@ -302,7 +302,7 @@ struct GoalsView: View {
 
                 if history.isEmpty {
                     Text("No completed goals yet.")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppColor.secondaryText)
                         .rowStyling()
                 } else {
                     ForEach(sortedHistory) { h in
@@ -311,7 +311,7 @@ struct GoalsView: View {
                                 Text(h.title).fontWeight(.medium)
                                 Text("\(h.difficulty) • \(h.completedAt.formatted(date: .abbreviated, time: .omitted))")
                                     .font(.dynaPuff(13))
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(AppColor.secondaryText)
                             }
                             Spacer()
                             Text("+💰\(h.reward)")
@@ -395,7 +395,7 @@ struct GoalsView: View {
 
                 Text("\(g.progress)/\(g.target)")
                     .font(.dynaPuff(13))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(AppColor.secondaryText)
 
                 Text(g.difficulty)
                     .font(.dynaPuff(13))
@@ -600,7 +600,7 @@ private struct GoalEditorView: View {
                     Stepper("Target: \(target)", value: $target, in: minTarget...50)
 
                     LabeledContent("Difficulty", value: difficulty)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppColor.secondaryText)
                 }
 
                 Section {
@@ -612,7 +612,7 @@ private struct GoalEditorView: View {
 
                     if !editor.isNew {
                         LabeledContent("Progress", value: "\(editor.goal.progress)/\(target)")
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(AppColor.secondaryText)
                     }
 
                     if GoalKeywords.isFoodRelated(title) {
@@ -621,7 +621,7 @@ private struct GoalEditorView: View {
                             systemImage: "fork.knife"
                         )
                         .font(.dynaPuff(13))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppColor.secondaryText)
                     }
 
                 }
@@ -706,7 +706,7 @@ private struct ClearConfirmationView: View {
     let onConfirm: () -> Void
     let onCancel: () -> Void
 
-    private let backgroundColor = Color(red: 1.0, green: 0.97, blue: 0.93)
+    private let backgroundColor = AppColor.background
 
     var body: some View {
         ZStack {
@@ -728,7 +728,7 @@ private struct ClearConfirmationView: View {
 
                 Text(prompt.message)
                     .font(.dynaPuff(17))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(AppColor.secondaryText)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 8)
 
