@@ -48,6 +48,19 @@ struct AllRestaurantsView: View {
             }
         }
 
+        // Rank full dietary matches first, then vegan-friendly spots, then
+        // weaker matches. This keeps the list ordered even with the filter on.
+        if !diet.isEmpty {
+            list = list
+                .map { (restaurant: $0, score: $0.dietAdherence(for: diet).score) }
+                .sorted { lhs, rhs in
+                    if lhs.score != rhs.score { return lhs.score > rhs.score }
+                    return lhs.restaurant.name.localizedCaseInsensitiveCompare(rhs.restaurant.name)
+                        == .orderedAscending
+                }
+                .map(\.restaurant)
+        }
+
         return list
     }
 
@@ -86,7 +99,7 @@ struct AllRestaurantsView: View {
                 RegionFilterBar(selection: $preferredLocation)
 
                 if !diet.isEmpty {
-                    Toggle("Only spots matching all my dietary needs", isOn: $onlyDietMatches)
+                    Toggle("Only spots with options for my dietary needs", isOn: $onlyDietMatches)
                         .font(.dynaPuff(15))
                         .tint(.teal)
                         .padding(.horizontal, 4)

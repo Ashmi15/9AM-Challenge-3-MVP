@@ -46,9 +46,13 @@ struct RestaurantPreviewSheet: View {
 
             Divider()
 
-            Text("A little taste of what's waiting for you!")
-                .font(.dynaPuff(15))
-                .foregroundStyle(.secondary)
+            Text(
+                restaurant.summary.isEmpty
+                    ? "A little taste of what's waiting for you!"
+                    : restaurant.summary
+            )
+            .font(.dynaPuff(15))
+            .foregroundStyle(.secondary)
 
             Spacer(minLength: 0)
 

@@ -32,6 +32,14 @@ struct WeeklyRecommendationsSection: View {
         return Array(picks.prefix(3))
     }
 
+    /// True for a vegan-friendly pick that is not fully vegan, so Munchkin can
+    /// explain why it still appears further down the list.
+    private func showsDietNote(for restaurant: Restaurant) -> Bool {
+        guard !diet.isEmpty else { return false }
+        let adherence = restaurant.dietAdherence(for: diet)
+        return adherence.isRecommended && !adherence.adheresToAll
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 5) {
             HStack {
@@ -92,12 +100,19 @@ struct WeeklyRecommendationsSection: View {
                     .frame(maxWidth: .infinity, minHeight: 60)
             } else {
                 ForEach(restaurants) { restaurant in
-                    NavigationLink {
-                        RestaurantDetailView(restaurant: restaurant)
-                    } label: {
-                        RestaurantCard(restaurant: restaurant)
+                    VStack(alignment: .leading, spacing: 6) {
+                        NavigationLink {
+                            RestaurantDetailView(restaurant: restaurant)
+                        } label: {
+                            RestaurantCard(restaurant: restaurant)
+                        }
+                        .buttonStyle(.plain)
+
+                        if showsDietNote(for: restaurant) {
+                            MunchkinDietNote(adherence: restaurant.dietAdherence(for: diet))
+                                .padding(.horizontal, 6)
+                        }
                     }
-                    .buttonStyle(.plain)
                 }
             }
         }

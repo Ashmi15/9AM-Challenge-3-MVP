@@ -87,6 +87,12 @@ struct RestaurantDetailView: View {
                         .font(.dynaPuff(15))
                         .foregroundStyle(.secondary)
 
+                    if !restaurant.summary.isEmpty {
+                        Text(restaurant.summary)
+                            .font(.dynaPuff(15))
+                            .foregroundStyle(.secondary)
+                    }
+
                     MunchkinDietMessage(
                         adherence: restaurant.dietAdherence(for: diet)
                     )

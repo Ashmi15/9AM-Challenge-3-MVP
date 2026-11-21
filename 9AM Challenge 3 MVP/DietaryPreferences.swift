@@ -25,8 +25,7 @@ struct DietaryRestriction: Hashable, Identifiable {
         label: "vegetarian",
         positive: [
             "vegetarian", "vegan", "veggie", "veg", "meat-free", "meat free",
-            "plant-based", "plant based", "greens", "salad", "organic",
-            "healthy", "juice", "smoothie"
+            "plant-based", "plant based", "plantbased"
         ],
         negative: [
             "steak", "seafood", "bbq", "barbecue", "chicken", "pork", "bacon",
@@ -40,8 +39,7 @@ struct DietaryRestriction: Hashable, Identifiable {
         label: "vegan",
         positive: [
             "vegan", "plant-based", "plant based", "plantbased", "meat-free",
-            "meat free", "greens", "salad", "organic", "juice", "smoothie",
-            "raw food"
+            "meat free", "raw food"
         ],
         negative: [
             "steak", "seafood", "bbq", "barbecue", "chicken", "pork", "bacon",
@@ -89,6 +87,9 @@ struct DietaryPreferences {
         guard !isEmpty else {
             return "Pick a dietary restriction and I'll push the spots that fit it to the top!"
         }
+        if vegan {
+            return "I'll put fully vegan spots first, then places with vegan options — check the menu before ordering!"
+        }
         let needs = active.count == 1
             ? "all of your dietary needs"
             : "all \(active.count) of your dietary needs"
@@ -103,8 +104,26 @@ struct DietAdherence {
     let uncertain: [DietaryRestriction]
     let conflicting: [DietaryRestriction]
     let total: Int
+    /// True when a vegan diner has dedicated vegan dishes to order, even if
+    /// the kitchen itself is not fully vegan.
+    let veganOptionsAvailable: Bool
 
     var adheresToAll: Bool { conflicting.isEmpty && uncertain.isEmpty }
+
+    /// Shown in recommendation lists: full matches, plus venues that still
+    /// have vegan options when the user is vegan. Those rank lower.
+    var isRecommended: Bool {
+        adheresToAll || (veganOptionsAvailable && conflicting.isEmpty)
+    }
+
+    /// 1.0 when every restriction is satisfied, lower when some are only
+    /// unconfirmed or clash. Used to rank restaurants when the diet filter
+    /// is switched off.
+    var score: Double {
+        guard total > 0 else { return 1 }
+        let value = Double(matched.count) + 0.25 * Double(uncertain.count)
+        return value / Double(total)
+    }
 
     var message: String {
         if total == 0 {
@@ -115,6 +134,14 @@ struct DietAdherence {
                 ? "all of your dietary needs"
                 : "all \(total) of your dietary needs"
             return "Munchkin checked what we know: this spot matches \(needs)! ✅"
+        }
+
+        if veganOptionsAvailable {
+            let base = "Munchkin says this spot isn't purely vegan, but it has vegan options — check the menu before ordering!"
+            if matched.isEmpty {
+                return base
+            }
+            return "Munchkin can confirm \(joined(matched.map(\.label))). This spot isn't purely vegan, but it has vegan options — check the menu!"
         }
 
         let confirmed = matched.map(\.label)
@@ -155,10 +182,64 @@ struct DietAdherence {
 }
 
 extension Restaurant {
-    /// Keyword-based adherence: the bundled data has no dietary tags, so this
-    /// uses the restaurant name and cuisine and is deliberately worded as a
-    /// "best guess" in the Munchkin message.
+    /// How well this restaurant fits the selected restrictions. Curated venues
+    /// carry an explicit classification; everything else falls back to keyword
+    /// matching against the name and cuisine, which is deliberately worded as
+    /// a "best guess" in the Munchkin message.
     func dietAdherence(for preferences: DietaryPreferences) -> DietAdherence {
+        guard let dietClass else {
+            return keywordAdherence(for: preferences)
+        }
+        return classifiedAdherence(for: preferences, classifiedAs: dietClass)
+    }
+
+    private func classifiedAdherence(
+        for preferences: DietaryPreferences,
+        classifiedAs dietClass: DietClass
+    ) -> DietAdherence {
+        var matched: [DietaryRestriction] = []
+        var uncertain: [DietaryRestriction] = []
+        var conflicting: [DietaryRestriction] = []
+        var offersVeganOptions = false
+
+        for restriction in preferences.active {
+            switch (restriction.key, dietClass) {
+            case ("dietVegetarian", .vegan),
+                 ("dietVegetarian", .vegetarianWithVeganOptions),
+                 ("dietVegetarian", .vegetarian),
+                 ("dietVegetarian", .mixedWithVeganOptions),
+                 ("dietVegan", .vegan):
+                matched.append(restriction)
+            case ("dietVegan", .vegetarianWithVeganOptions):
+                // Vegetarian kitchens may still use dairy, eggs or honey, but
+                // they do offer vegan dishes for the diner to choose.
+                offersVeganOptions = true
+                uncertain.append(restriction)
+            case ("dietVegan", .mixedWithVeganOptions):
+                // Mixed menu, but dedicated vegan options are available.
+                offersVeganOptions = true
+                uncertain.append(restriction)
+            case ("dietVegan", .vegetarian):
+                // Vegetarian-only kitchens are not guaranteed to have vegan
+                // dishes, so vegan diners should check with the restaurant.
+                uncertain.append(restriction)
+            default:
+                // Halal and any future restriction is not covered by the
+                // vegetarian/vegan classification.
+                uncertain.append(restriction)
+            }
+        }
+
+        return DietAdherence(
+            matched: matched,
+            uncertain: uncertain,
+            conflicting: conflicting,
+            total: preferences.active.count,
+            veganOptionsAvailable: offersVeganOptions
+        )
+    }
+
+    private func keywordAdherence(for preferences: DietaryPreferences) -> DietAdherence {
         let searchableText = "\(name) \(cuisine)".lowercased()
 
         var matched: [DietaryRestriction] = []
@@ -188,7 +269,8 @@ extension Restaurant {
             matched: matched,
             uncertain: uncertain,
             conflicting: conflicting,
-            total: preferences.active.count
+            total: preferences.active.count,
+            veganOptionsAvailable: false
         )
     }
 }
@@ -196,38 +278,65 @@ extension Restaurant {
 // MARK: - Filtering
 
 extension RestaurantDirectory {
-    /// Only restaurants that satisfy every selected restriction are returned.
-    /// When no restrictions are selected, every restaurant is eligible.
+    /// Restaurants that fit the selected restrictions. This is every full
+    /// match, plus venues that still have vegan options when the diner is
+    /// vegan. When no restrictions are selected, every restaurant is eligible.
     static func matchingDiet(
         _ restaurants: [Restaurant],
         using preferences: DietaryPreferences
     ) -> [Restaurant] {
         guard !preferences.isEmpty else { return restaurants }
-        return restaurants.filter { $0.dietAdherence(for: preferences).adheresToAll }
+        return restaurants.filter { $0.dietAdherence(for: preferences).isRecommended }
     }
 
-    /// Weekly picks that honour every restriction. Curated picks come first,
-    /// then the rest of the directory so no matching restaurant is overlooked.
+    /// Weekly picks ordered by dietary fit. Full matches come first, then
+    /// venues with vegan options for vegan diners, then weaker matches. The
+    /// curated weekly picks break ties so the home screen stays varied.
     static func dietAwareWeeklyPicks(
         for region: RestaurantRegion,
         using preferences: DietaryPreferences
     ) -> [Restaurant] {
         guard !preferences.isEmpty else { return weeklyPicks(for: region) }
 
-        let safeDirectory = matchingDiet(restaurants(in: region), using: preferences)
-        var result = matchingDiet(weeklyPicks(for: region), using: preferences)
-        var seenIDs = Set(result.map(\.id))
-
-        for restaurant in safeDirectory where !seenIDs.contains(restaurant.id) {
-            result.append(restaurant)
-            seenIDs.insert(restaurant.id)
+        let curatedIDs = Set(weeklyPicks(for: region).map(\.id))
+        let candidates = restaurants(in: region).filter {
+            $0.dietAdherence(for: preferences).isRecommended
         }
-        return result
+
+        return candidates
+            .map { (restaurant: $0, score: $0.dietAdherence(for: preferences).score) }
+            .sorted { lhs, rhs in
+                if lhs.score != rhs.score { return lhs.score > rhs.score }
+                let lhsCurated = curatedIDs.contains(lhs.restaurant.id)
+                let rhsCurated = curatedIDs.contains(rhs.restaurant.id)
+                if lhsCurated != rhsCurated { return lhsCurated }
+                return lhs.restaurant.name.localizedCaseInsensitiveCompare(rhs.restaurant.name)
+                    == .orderedAscending
+            }
+            .map(\.restaurant)
     }
 
 }
 
 // MARK: - Munchkin message
+
+/// Compact note used under recommendation cards so the Munchkin verdict is
+/// visible without opening the restaurant.
+struct MunchkinDietNote: View {
+    let adherence: DietAdherence
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 6) {
+            MunchkinAvatarView(size: 20)
+
+            Text(adherence.message)
+                .font(.dynaPuff(11))
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .accessibilityElement(children: .combine)
+    }
+}
 
 struct MunchkinDietMessage: View {
     let adherence: DietAdherence

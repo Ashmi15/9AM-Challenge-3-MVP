@@ -43,9 +43,9 @@ enum RestaurantRegion: String, CaseIterable, Identifiable {
     private static let areaLookupRegions: [(RestaurantRegion, [String])] = [
         (.north, [
             "Admiralty", "Ang Mo Kio", "Canberra", "Chencharu", "Chong Pang",
-            "Fernvale", "Kebun Baru", "Lentor", "North Region",
+            "Fernvale", "Kebun Baru", "Lentor", "Marsiling", "North Region",
             "North-east Region", "Sembawang", "Simpang", "Thomson",
-            "Woodlands", "Yishun"
+            "Upper Thomson", "Woodlands", "Yishun"
         ]),
         (.south, [
             "Fort Siloso", "HarbourFront", "Sentosa Cove", "Southern Islands"
@@ -54,15 +54,16 @@ enum RestaurantRegion: String, CaseIterable, Identifiable {
             "Bedok", "Bedok South", "Chai Chee", "Changi",
             "Changi Business Park", "Changi Village", "Compassvale",
             "East Region", "Eunos", "Geylang", "Hougang", "Joo Chiat",
-            "Kaki Bukit", "Marine Parade", "Pasir Ris", "Punggol",
-            "Sengkang", "Tai Seng", "Tampines", "Telok Kurau"
+            "Kaki Bukit", "Kovan", "Marine Parade", "Pasir Ris",
+            "Paya Lebar", "Punggol", "Sengkang", "Tai Seng", "Tampines",
+            "Telok Kurau"
         ]),
         (.west, [
-            "Bukit Batok", "Bukit Gombak", "Bukit Panjang", "Choa Chu Kang",
-            "Clementi", "Jurong East", "Jurong West", "Marsiling",
-            "Neo Tiew Estate", "Pioneer", "Queenstown", "Sungei Kadut",
-            "Tengah", "Ulu Pandan", "Upper Bukit Timah", "West Region",
-            "Yew Tee", "Yuhua"
+            "Beauty World", "Bukit Batok", "Bukit Gombak", "Bukit Panjang",
+            "Bukit Timah", "Choa Chu Kang", "Clementi", "Jurong East",
+            "Jurong West", "Neo Tiew Estate", "Pioneer", "Queenstown",
+            "Sungei Kadut", "Tengah", "Ulu Pandan", "Upper Bukit Timah",
+            "West Region", "Yew Tee", "Yuhua"
         ])
     ]
 
@@ -77,6 +78,20 @@ enum RestaurantRegion: String, CaseIterable, Identifiable {
     }()
 }
 
+/// How a restaurant's menu fits a plant-based diet. Curated venues carry an
+/// explicit class; the OpenStreetMap export leaves this `nil` and falls back
+/// to keyword matching.
+enum DietClass: String, Hashable {
+    /// Fully vegan — no meat, dairy, eggs or honey.
+    case vegan
+    /// Vegetarian restaurant that also offers vegan choices.
+    case vegetarianWithVeganOptions
+    /// Vegetarian only; vegan dishes are not guaranteed.
+    case vegetarian
+    /// Mixed menu (serves meat) but with dedicated vegan options.
+    case mixedWithVeganOptions
+}
+
 struct Restaurant: Identifiable, Hashable {
     let id: String
     let name: String
@@ -89,6 +104,11 @@ struct Restaurant: Identifiable, Hashable {
     let latitude: Double
     let longitude: Double
     let isStale: Bool
+    /// Explicit dietary classification for curated venues. `nil` means the
+    /// restaurant came from the OpenStreetMap export and has no diet tags.
+    var dietClass: DietClass? = nil
+    /// Short editorial blurb for curated venues, shown on the detail screen.
+    var summary: String = ""
 
     /// "Japanese • Tanjong Pagar"
     var description: String {
@@ -118,6 +138,16 @@ struct Restaurant: Identifiable, Hashable {
     }
 
     var emoji: String {
+        // Curated venues use a diet marker so vegan and vegetarian spots are
+        // recognisable at a glance, regardless of cuisine.
+        if let dietClass {
+            switch dietClass {
+            case .vegan: return "🌱"
+            case .vegetarianWithVeganOptions, .vegetarian: return "🥬"
+            case .mixedWithVeganOptions: break
+            }
+        }
+
         let lowercasedCuisine = cuisine.lowercased()
         for (keyword, emoji) in Self.emojiKeywords
         where lowercasedCuisine.contains(keyword) {
@@ -259,8 +289,19 @@ struct Restaurant: Identifiable, Hashable {
 }
 
 enum RestaurantDirectory {
-    /// Every restaurant in the CSV that has a name, cuisine, and area.
-    static let all: [Restaurant] = loadRestaurants()
+    /// Every restaurant in the CSV that has a name, cuisine, and area, plus
+    /// the curated vegan and vegetarian venues. Curated entries win on a name
+    /// clash so their explicit dietary classification is kept.
+    static let all: [Restaurant] = {
+        let curated = DietaryRestaurants.all
+        let curatedNames = Set(curated.map { $0.name.lowercased() })
+        let directory = loadRestaurants().filter {
+            !curatedNames.contains($0.name.lowercased())
+        }
+        return (directory + curated).sorted {
+            $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+        }
+    }()
 
     /// A varied, deterministic set of restaurants for the Home and Weekly screens.
     static let weeklyRecommendations: [Restaurant] = makeWeeklyRecommendations(from: all)
@@ -289,9 +330,10 @@ enum RestaurantDirectory {
         guard !cravings.isEmpty else { return [] }
 
         var candidates = restaurants(in: region)
-        if let preferences, !preferences.isEmpty {
+        let activePreferences = preferences.flatMap { $0.isEmpty ? nil : $0 }
+        if let activePreferences {
             candidates = candidates.filter {
-                $0.dietAdherence(for: preferences).adheresToAll
+                $0.dietAdherence(for: activePreferences).isRecommended
             }
         }
 
@@ -303,6 +345,11 @@ enum RestaurantDirectory {
             .sorted { lhs, rhs in
                 if lhs.matches != rhs.matches {
                     return lhs.matches > rhs.matches
+                }
+                if let activePreferences {
+                    let lhsScore = lhs.restaurant.dietAdherence(for: activePreferences).score
+                    let rhsScore = rhs.restaurant.dietAdherence(for: activePreferences).score
+                    if lhsScore != rhsScore { return lhsScore > rhsScore }
                 }
                 let lhsHasWebsite = lhs.restaurant.websiteURL != nil
                 let rhsHasWebsite = rhs.restaurant.websiteURL != nil

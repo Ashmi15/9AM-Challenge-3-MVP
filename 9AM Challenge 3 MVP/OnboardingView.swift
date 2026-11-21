@@ -194,7 +194,7 @@ struct OnboardingView: View {
                 .font(.dynaPuff(15))
                 .foregroundStyle(.secondary)
 
-            VStack(spacing: 14) {
+            VStack(alignment: .leading, spacing: 14) {
                 tutorialRow(
                     "house.fill",
                     "Home",
