@@ -247,7 +247,10 @@ extension Restaurant {
         var conflicting: [DietaryRestriction] = []
 
         for restriction in preferences.active {
-            if restriction.positive.contains(where: { searchableText.contains($0) }) {
+            // Halal status comes from the bundled MUIS list, not name guessing.
+            if restriction.key == "dietHalal" && isHalalCertified {
+                matched.append(restriction)
+            } else if restriction.positive.contains(where: { searchableText.contains($0) }) {
                 matched.append(restriction)
             } else if restriction.negative.contains(where: { searchableText.contains($0) }) {
                 conflicting.append(restriction)
@@ -292,15 +295,29 @@ extension RestaurantDirectory {
     /// Weekly picks ordered by dietary fit. Full matches come first, then
     /// venues with vegan options for vegan diners, then weaker matches. The
     /// curated weekly picks break ties so the home screen stays varied.
+    /// Weekly picks that honour every restriction. When Halal is selected the
+    /// curated pool comes from the verified MUIS directory instead of OSM.
     static func dietAwareWeeklyPicks(
         for region: RestaurantRegion,
         using preferences: DietaryPreferences
     ) -> [Restaurant] {
-        guard !preferences.isEmpty else { return weeklyPicks(for: region) }
+        let useHalalDirectory = preferences.halal
+        let picks = weeklyPicks(for: region, halalOnly: useHalalDirectory)
+        guard !preferences.isEmpty else { return picks }
 
         let curatedIDs = Set(weeklyPicks(for: region).map(\.id))
         let candidates = restaurants(in: region).filter {
             $0.dietAdherence(for: preferences).isRecommended
+        let safeDirectory = matchingDiet(
+            restaurants(in: region, halalOnly: useHalalDirectory),
+            using: preferences
+        )
+        var result = matchingDiet(picks, using: preferences)
+        var seenIDs = Set(result.map(\.id))
+
+        for restaurant in safeDirectory where !seenIDs.contains(restaurant.id) {
+            result.append(restaurant)
+            seenIDs.insert(restaurant.id)
         }
 
         return candidates

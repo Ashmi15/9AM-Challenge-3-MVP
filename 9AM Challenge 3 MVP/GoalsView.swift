@@ -127,6 +127,31 @@ enum GoalKeywords {
     static func isCuisineRelated(_ title: String) -> Bool {
         title.lowercased().contains("cuisine")
     }
+
+    /// Reads a count from a goal title, e.g. "Try 5 new restaurants" -> 5.
+    /// Both digits and written numbers are understood. Only counts in the
+    /// app's target range are returned so stray numbers are ignored.
+    static func targetNumber(in title: String) -> Int? {
+        let text = title.lowercased()
+
+        if let match = text.range(of: #"\b\d{1,2}\b"#, options: .regularExpression),
+           let value = Int(text[match]),
+           (1...50).contains(value) {
+            return value
+        }
+
+        let numberWords: [String: Int] = [
+            "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
+            "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10,
+            "eleven": 11, "twelve": 12, "thirteen": 13, "fourteen": 14,
+            "fifteen": 15, "sixteen": 16, "seventeen": 17, "eighteen": 18,
+            "nineteen": 19, "twenty": 20, "thirty": 30, "forty": 40, "fifty": 50
+        ]
+        for (word, value) in numberWords where text.contains(word) {
+            return value
+        }
+        return nil
+    }
 }
 
 struct GoalsView: View {
@@ -134,13 +159,11 @@ struct GoalsView: View {
     @State private var history: [CompletedGoalRecord] = []
     @State private var currency: Int = 0
 
-    @State private var showAdd = false
+    @State private var editor: GoalEditor?
     @State private var clearPrompt: ClearPrompt?
-    @State private var newTitle = ""
-    @State private var newTarget = 1
 
-    private let backgroundColor = Color(red: 1.0, green: 0.97, blue: 0.93)
-    private let cardColor = Color.white
+    private let backgroundColor = AppColor.background
+    private let cardColor = AppColor.card
 
     /// Completed goals that still owe coins. Kept at the top of the list so
     /// they are impossible to miss.
@@ -174,12 +197,11 @@ struct GoalsView: View {
                     ForEach(claimableGoals) { g in
                         goalRow(g)
                             .rowStyling()
+                            .swipeActions(edge: .leading) {
+                                editSwipe(for: g)
+                            }
                             .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                                Button(role: .destructive) {
-                                    deleteGoal(g.id)
-                                } label: {
-                                    Label("Delete", systemImage: "trash")
-                                }
+                                deleteSwipe(for: g)
                             }
                     }
                 }
@@ -196,8 +218,12 @@ struct GoalsView: View {
                         Button("Clear") {
                             clearPrompt = .active
                         }
+                        .buttonStyle(.plain)
                         .font(.dynaPuff(15).weight(.semibold))
                         .foregroundStyle(.orange)
+                        // Keep the tap target to the word "Clear" only, so
+                        // tapping the section title does not prompt to clear.
+                        .contentShape(Rectangle())
                     }
                 }
                 .rowStyling(top: 12, bottom: 0)
@@ -208,18 +234,17 @@ struct GoalsView: View {
                             ? "No active goals. Add one below."
                             : "Nothing in progress. Add another goal below."
                     )
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(AppColor.secondaryText)
                     .rowStyling()
                 } else {
                     ForEach(activeGoals) { g in
                         goalRow(g)
                             .rowStyling()
+                            .swipeActions(edge: .leading) {
+                                editSwipe(for: g)
+                            }
                             .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                                Button(role: .destructive) {
-                                    deleteGoal(g.id)
-                                } label: {
-                                    Label("Delete", systemImage: "trash")
-                                }
+                                deleteSwipe(for: g)
                             }
                     }
                 }
@@ -228,12 +253,12 @@ struct GoalsView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Quick add")
                         .font(.dynaPuff(15))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppColor.secondaryText)
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack {
-                            Button("Try 3 new restaurants") { presetGoal(title: "Try 3 new restaurants", target: 3, difficulty: "Medium") }
-                            Button("Explore 2 new cuisines") { presetGoal(title: "Explore 2 new cuisines", target: 2, difficulty: "Medium") }
-                            Button("Visit 1 new spot") { presetGoal(title: "Visit 1 new spot", target: 1, difficulty: "Easy") }
+                            Button("Try 3 new restaurants") { presetGoal(title: "Try 3 new restaurants", target: 3) }
+                            Button("Explore 2 new cuisines") { presetGoal(title: "Explore 2 new cuisines", target: 2) }
+                            Button("Visit 1 new spot") { presetGoal(title: "Visit 1 new spot", target: 1) }
                         }
                         .buttonStyle(.bordered)
                         .tint(.orange)
@@ -242,7 +267,7 @@ struct GoalsView: View {
                 .rowStyling(top: 12)
 
                 Button {
-                    showAdd = true
+                    editor = .new()
                 } label: {
                     Label("Add Custom Goal", systemImage: "plus.circle.fill")
                         .frame(maxWidth: .infinity)
@@ -259,7 +284,7 @@ struct GoalsView: View {
                 HStack(alignment: .firstTextBaseline) {
                     Text("History")
                         .font(.dynaPuff(22))
-                        .fontWeight(.semibold)
+                        .fontWeight(.medium)
 
                     Spacer()
 
@@ -267,15 +292,17 @@ struct GoalsView: View {
                         Button("Clear") {
                             clearPrompt = .history
                         }
+                        .buttonStyle(.plain)
                         .font(.dynaPuff(15).weight(.semibold))
                         .foregroundStyle(.orange)
+                        .contentShape(Rectangle())
                     }
                 }
                 .rowStyling(top: 8, bottom: 0)
 
                 if history.isEmpty {
                     Text("No completed goals yet.")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppColor.secondaryText)
                         .rowStyling()
                 } else {
                     ForEach(sortedHistory) { h in
@@ -284,7 +311,7 @@ struct GoalsView: View {
                                 Text(h.title).fontWeight(.medium)
                                 Text("\(h.difficulty) • \(h.completedAt.formatted(date: .abbreviated, time: .omitted))")
                                     .font(.dynaPuff(13))
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(AppColor.secondaryText)
                             }
                             Spacer()
                             Text("+💰\(h.reward)")
@@ -335,35 +362,14 @@ struct GoalsView: View {
                     }
                 )
             }
-            .sheet(isPresented: $showAdd) {
-                NavigationStack {
-                    Form {
-                        TextField("Goal title", text: $newTitle)
-                        Stepper("Target: \(newTarget)", value: $newTarget, in: 1...50)
-
-                        if GoalKeywords.isFoodRelated(newTitle) {
-                            Label(
-                                "This goal will update when you mark a restaurant as visited.",
-                                systemImage: "fork.knife"
-                            )
-                            .font(.dynaPuff(13))
-                            .foregroundStyle(.secondary)
-                        }
+            .sheet(item: $editor) { editor in
+                GoalEditorView(editor: editor) { saved in
+                    if editor.isNew {
+                        goals.append(saved)
+                    } else if let index = goals.firstIndex(where: { $0.id == saved.id }) {
+                        goals[index] = saved
                     }
-                    .navigationTitle("New Goal")
-                    .tint(.orange)
-                    .toolbar {
-                        ToolbarItem(placement: .cancellationAction) {
-                            Button("Cancel") { showAdd = false }
-                        }
-                        ToolbarItem(placement: .confirmationAction) {
-                            Button("Add") {
-                                addGoal()
-                                showAdd = false
-                            }
-                            .disabled(newTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                        }
-                    }
+                    save()
                 }
             }
         }
@@ -389,7 +395,7 @@ struct GoalsView: View {
 
                 Text("\(g.progress)/\(g.target)")
                     .font(.dynaPuff(13))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(AppColor.secondaryText)
 
                 Text(g.difficulty)
                     .font(.dynaPuff(13))
@@ -418,26 +424,37 @@ struct GoalsView: View {
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 
-    func presetGoal(title: String, target: Int, difficulty: String) {
-        goals.append(GoalItem(title: title, target: target, progress: 0, difficulty: difficulty))
+    func presetGoal(title: String, target: Int) {
+        goals.append(GoalItem(
+            title: title,
+            target: target,
+            progress: 0,
+            difficulty: suggestedDifficulty(for: target)
+        ))
         save()
     }
 
-    func difficultyForTarget(_ target: Int) -> String {
-        switch target {
-        case ...1: return "Easy"
-        case 2...3: return "Medium"
-        default: return "Hard"
+    func openEditor(for goal: GoalItem) {
+        editor = GoalEditor(goal: goal, isNew: false)
+    }
+
+    @ViewBuilder
+    func editSwipe(for goal: GoalItem) -> some View {
+        Button {
+            openEditor(for: goal)
+        } label: {
+            Label("Edit", systemImage: "pencil")
         }
+        .tint(.orange)
     }
 
-    func addGoal() {
-        let t = newTitle.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !t.isEmpty else { return }
-        goals.append(GoalItem(title: t, target: newTarget, progress: 0, difficulty: difficultyForTarget(newTarget)))
-        newTitle = ""
-        newTarget = 1
-        save()
+    @ViewBuilder
+    func deleteSwipe(for goal: GoalItem) -> some View {
+        Button(role: .destructive) {
+            deleteGoal(goal.id)
+        } label: {
+            Label("Delete", systemImage: "trash")
+        }
     }
 
     func clearActiveGoals() {
@@ -514,6 +531,136 @@ struct GoalsView: View {
     }
 }
 
+/// Payload for the shared add/edit goal sheet.
+struct GoalEditor: Identifiable {
+    let id = UUID()
+    let goal: GoalItem
+    let isNew: Bool
+
+    static func new() -> GoalEditor {
+        GoalEditor(
+            goal: GoalItem(
+                title: "",
+                target: 1,
+                progress: 0,
+                difficulty: suggestedDifficulty(for: 1)
+            ),
+            isNew: true
+        )
+    }
+}
+
+private func suggestedDifficulty(for target: Int) -> String {
+    switch target {
+    case ...1: return "Easy"
+    case 2...3: return "Medium"
+    default: return "Hard"
+    }
+}
+
+/// Form used for both creating a goal and editing an existing one.
+private struct GoalEditorView: View {
+    @Environment(\.dismiss) private var dismiss
+
+    let editor: GoalEditor
+    let onSave: (GoalItem) -> Void
+
+    @State private var title: String
+    @State private var target: Int
+
+    init(editor: GoalEditor, onSave: @escaping (GoalItem) -> Void) {
+        self.editor = editor
+        self.onSave = onSave
+        _title = State(initialValue: editor.goal.title)
+        _target = State(initialValue: editor.goal.target)
+    }
+
+    /// Difficulty is derived from the target, never chosen by the user.
+    private var difficulty: String {
+        suggestedDifficulty(for: target)
+    }
+
+    private var canSave: Bool {
+        !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Goal") {
+                    TextField("Goal title", text: $title)
+                        .onChange(of: title) { _, newTitle in
+                            if let detected = GoalKeywords.targetNumber(in: newTitle) {
+                                // A number in the title sets the target, and
+                                // difficulty follows from it automatically.
+                                target = max(detected, minTarget)
+                            }
+                        }
+
+                    Stepper("Target: \(target)", value: $target, in: minTarget...50)
+
+                    LabeledContent("Difficulty", value: difficulty)
+                        .foregroundStyle(AppColor.secondaryText)
+                }
+
+                Section {
+                    Label(
+                        "Reward: +💰\(GoalReward.coins(for: difficulty))",
+                        systemImage: "gift.fill"
+                    )
+                    .foregroundStyle(.orange)
+
+                    if !editor.isNew {
+                        LabeledContent("Progress", value: "\(editor.goal.progress)/\(target)")
+                            .foregroundStyle(AppColor.secondaryText)
+                    }
+
+                    if GoalKeywords.isFoodRelated(title) {
+                        Label(
+                            "This goal also updates when you mark a restaurant as visited.",
+                            systemImage: "fork.knife"
+                        )
+                        .font(.dynaPuff(13))
+                        .foregroundStyle(AppColor.secondaryText)
+                    }
+
+                }
+            }
+            .navigationTitle(editor.isNew ? "New Goal" : "Edit Goal")
+            .navigationBarTitleDisplayMode(.inline)
+            .tint(.orange)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(editor.isNew ? "Add" : "Save") { save() }
+                        .disabled(!canSave)
+                }
+            }
+        }
+    }
+
+    /// Moving the target cannot drop below progress already made.
+    private var minTarget: Int {
+        max(1, editor.goal.progress)
+    }
+
+    private func save() {
+        guard canSave else { return }
+
+        var updated = editor.goal
+        updated.title = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        updated.target = target
+        updated.difficulty = difficulty
+        // Progress, completion date and claim state are intentionally left
+        // untouched: those are earned, not edited.
+
+        onSave(updated)
+        dismiss()
+    }
+}
+
 /// Which list a full-screen clear confirmation is asking about.
 enum ClearPrompt: String, Identifiable {
     case history
@@ -559,7 +706,7 @@ private struct ClearConfirmationView: View {
     let onConfirm: () -> Void
     let onCancel: () -> Void
 
-    private let backgroundColor = Color(red: 1.0, green: 0.97, blue: 0.93)
+    private let backgroundColor = AppColor.background
 
     var body: some View {
         ZStack {
@@ -581,7 +728,7 @@ private struct ClearConfirmationView: View {
 
                 Text(prompt.message)
                     .font(.dynaPuff(17))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(AppColor.secondaryText)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 8)
 

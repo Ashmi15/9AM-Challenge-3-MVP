@@ -68,7 +68,7 @@ struct WeeklyRecsView: View {
                         : "Handpicked by Munchkin for the \(region.rawValue) region!"
                 )
                 .font(.dynaPuff(15))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppColor.secondaryText)
 
                 RegionFilterBar(selection: $preferredLocation)
 
@@ -109,7 +109,7 @@ struct WeeklyRecsView: View {
             .padding(20)
         }
         .background(
-            Color(red: 1.0, green: 0.97, blue: 0.93)
+            AppColor.background
         )
         .searchable(text: $searchText, prompt: "Search name, cuisine or area")
 

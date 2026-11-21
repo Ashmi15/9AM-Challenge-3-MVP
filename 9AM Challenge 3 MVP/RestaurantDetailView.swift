@@ -85,7 +85,13 @@ struct RestaurantDetailView: View {
 
                     Text(restaurant.description)
                         .font(.dynaPuff(15))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppColor.secondaryText)
+
+                    if restaurant.isHalalCertified {
+                        Text("MUIS halal certified")
+                            .font(.dynaPuff(13).weight(.semibold))
+                            .foregroundStyle(AppColor.secondaryText)
+                    }
 
                     if !restaurant.summary.isEmpty {
                         Text(restaurant.summary)
@@ -169,7 +175,7 @@ struct RestaurantDetailView: View {
                         HStack(spacing: 10) {
                             Image(systemName: hasVisited ? "checkmark.square.fill" : "square")
                                 .font(.dynaPuff(22))
-                                .foregroundStyle(hasVisited ? .orange : .secondary)
+                                .foregroundStyle(hasVisited ? .orange : AppColor.secondaryText)
                             Text("I've eaten here!")
                                 .foregroundStyle(.primary)
                         }
@@ -178,7 +184,7 @@ struct RestaurantDetailView: View {
 
                     Text("Each spot counts once, for one quest only. Cuisine goals need different cuisines.")
                         .font(.dynaPuff(13))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppColor.secondaryText)
                 }
 
                 // Only show feedback if visited
@@ -189,7 +195,7 @@ struct RestaurantDetailView: View {
             .padding(20)
         }
         .background(
-            Color(red: 1.0, green: 0.97, blue: 0.93)
+            AppColor.background
         )
         .navigationTitle("Restaurant Details")
         .navigationBarTitleDisplayMode(.inline)
@@ -220,7 +226,7 @@ struct RestaurantDetailView: View {
 
             Text("Tell Munchkin what you thought so it can recommend better restaurants next time!")
                 .font(.dynaPuff(15))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(AppColor.secondaryText)
 
             // Star rating
             VStack(alignment: .leading, spacing: 12) {
@@ -272,7 +278,7 @@ struct RestaurantDetailView: View {
                                 .background(
                                     selectedFlavours.contains(flavour)
                                         ? Color.orange.opacity(0.3)
-                                        : Color.white
+                                        : AppColor.card
                                 )
                                 .clipShape(
                                     RoundedRectangle(cornerRadius: 12)
@@ -291,7 +297,7 @@ struct RestaurantDetailView: View {
                 TextEditor(text: $writtenReview)
                     .frame(height: 120)
                     .padding(8)
-                    .background(Color.white)
+                    .background(AppColor.card)
                     .clipShape(
                         RoundedRectangle(cornerRadius: 12)
                     )

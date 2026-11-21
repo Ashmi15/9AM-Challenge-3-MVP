@@ -110,6 +110,37 @@ struct Restaurant: Identifiable, Hashable {
     /// Short editorial blurb for curated venues, shown on the detail screen.
     var summary: String = ""
 
+    /// True when this restaurant CSV entry also appears in the MUIS halal list.
+    let isHalalCertified: Bool
+
+    init(
+        id: String,
+        name: String,
+        cuisine: String,
+        area: String,
+        address: String,
+        postcode: String,
+        phone: String,
+        website: String,
+        latitude: Double,
+        longitude: Double,
+        isStale: Bool,
+        isHalalCertified: Bool = false
+    ) {
+        self.id = id
+        self.name = name
+        self.cuisine = cuisine
+        self.area = area
+        self.address = address
+        self.postcode = postcode
+        self.phone = phone
+        self.website = website
+        self.latitude = latitude
+        self.longitude = longitude
+        self.isStale = isStale
+        self.isHalalCertified = isHalalCertified
+    }
+
     /// "Japanese • Tanjong Pagar"
     var description: String {
         "\(cuisine) • \(area)"
@@ -332,6 +363,9 @@ enum RestaurantDirectory {
         var candidates = restaurants(in: region)
         let activePreferences = preferences.flatMap { $0.isEmpty ? nil : $0 }
         if let activePreferences {
+        // With Halal selected, only MUIS-verified establishments are eligible.
+        var candidates = restaurants(in: region, halalOnly: preferences?.halal == true)
+        if let preferences, !preferences.isEmpty {
             candidates = candidates.filter {
                 $0.dietAdherence(for: activePreferences).isRecommended
             }
@@ -507,7 +541,12 @@ enum RestaurantDirectory {
                     latitude: Double(value(row, "latitude")) ?? 0,
                     longitude: Double(value(row, "longitude")) ?? 0,
                     isStale: value(row, "not_edited_in_4_years")
-                        .caseInsensitiveCompare("yes") == .orderedSame
+                        .caseInsensitiveCompare("yes") == .orderedSame,
+                    isHalalCertified: isHalalListed(
+                        name: name,
+                        postcode: postcode,
+                        address: address
+                    )
                 )
             )
         }
@@ -570,5 +609,125 @@ enum RestaurantDirectory {
         }
 
         return rows
+    }
+}
+
+// MARK: - Halal verification
+
+extension RestaurantDirectory {
+    /// Restaurants from the bundled restaurant CSV that also appear in the
+    /// MUIS halal list. No records are added from the halal CSV itself.
+    static let verifiedHalal: [Restaurant] = all.filter { $0.isHalalCertified }
+
+    /// Restaurants in a region, from either the full directory or the halal subset.
+    static func restaurants(in region: RestaurantRegion, halalOnly: Bool) -> [Restaurant] {
+        let source = halalOnly ? verifiedHalal : all
+        guard !region.isAnywhere else { return source }
+        return source.filter { $0.region == region }
+    }
+
+    /// Weekly picks drawn from the requested directory.
+    static func weeklyPicks(for region: RestaurantRegion, halalOnly: Bool) -> [Restaurant] {
+        guard halalOnly else { return weeklyPicks(for: region) }
+        return makeWeeklyRecommendations(from: restaurants(in: region, halalOnly: true))
+    }
+
+    /// The halal CSV is used purely as a lookup: normalised name -> records.
+    private static let halalIndex: [String: [(postcode: String, tokens: Set<String>)]] = loadHalalIndex()
+
+    /// Matches a restaurant CSV row against the MUIS list by name. The postcode
+    /// (or street tokens when the CSV has no postcode) disambiguates branches
+    /// that share a name.
+    static func isHalalListed(name: String, postcode: String, address: String) -> Bool {
+        guard let records = halalIndex[normalizedName(name)], !records.isEmpty else {
+            return false
+        }
+        let postcode = postcode.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !postcode.isEmpty else { return true }
+
+        if records.contains(where: { $0.postcode == postcode }) { return true }
+
+        let tokens = addressTokens(address)
+        return records.contains { !$0.tokens.isDisjoint(with: tokens) }
+    }
+
+    private static func loadHalalIndex() -> [String: [(postcode: String, tokens: Set<String>)]] {
+        guard let url = Bundle.main.url(
+            forResource: "halal_establishments",
+            withExtension: "csv"
+        ),
+        let rawText = try? String(contentsOf: url, encoding: .utf8) else {
+            return [:]
+        }
+
+        var text = rawText
+        if text.first == "\u{FEFF}" {
+            text.removeFirst()
+        }
+
+        let rows = parseCSV(text)
+        guard let header = rows.first else { return [:] }
+
+        let columnIndexes = Dictionary(
+            uniqueKeysWithValues: header.enumerated().map {
+                ($0.element.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(), $0.offset)
+            }
+        )
+
+        func value(_ row: [String], _ column: String) -> String {
+            guard let index = columnIndexes[column], index < row.count else {
+                return ""
+            }
+            return row[index].trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+
+        var index: [String: [(postcode: String, tokens: Set<String>)]] = [:]
+        for row in rows.dropFirst() {
+            guard value(row, "scheme").caseInsensitiveCompare("Eating Establishment") == .orderedSame else {
+                continue
+            }
+            let name = value(row, "name")
+            guard !name.isEmpty else { continue }
+            let address = value(row, "address")
+            index[normalizedName(name), default: []].append(
+                (postcode: halalPostcode(in: address), tokens: addressTokens(address))
+            )
+        }
+        return index
+    }
+
+    private static func normalizedName(_ name: String) -> String {
+        var result = ""
+        var lastWasSeparator = true
+        for character in name.lowercased() {
+            if character.isLetter || character.isNumber {
+                result.append(character)
+                lastWasSeparator = false
+            } else if !lastWasSeparator {
+                result.append(" ")
+                lastWasSeparator = true
+            }
+        }
+        return result.trimmingCharacters(in: .whitespaces)
+    }
+
+    private static func addressTokens(_ address: String) -> Set<String> {
+        let ignored: Set<String> = [
+            "road", "street", "avenue", "singapore", "restaurant",
+            "coffee", "shopping", "centre", "center"
+        ]
+        return Set(
+            address.lowercased()
+                .split(whereSeparator: { !$0.isLetter })
+                .map(String.init)
+                .filter { $0.count >= 4 && !ignored.contains($0) }
+        )
+    }
+
+    /// Last six-digit number in a halal address is the Singapore postcode.
+    private static func halalPostcode(in address: String) -> String {
+        address
+            .components(separatedBy: CharacterSet.decimalDigits.inverted)
+            .last { $0.count == 6 } ?? ""
     }
 }

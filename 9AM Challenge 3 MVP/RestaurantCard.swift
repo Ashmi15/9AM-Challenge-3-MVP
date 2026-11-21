@@ -26,7 +26,7 @@ struct RestaurantCard: View {
 
                 Text(restaurant.description)
                     .font(.dynaPuff(15))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(AppColor.secondaryText)
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
             }
@@ -37,7 +37,7 @@ struct RestaurantCard: View {
                 .foregroundStyle(.blue)
         }
         .padding(12)
-        .background(.white)
+        .background(AppColor.card)
         .clipShape(RoundedRectangle(cornerRadius: 18))
     }
 }

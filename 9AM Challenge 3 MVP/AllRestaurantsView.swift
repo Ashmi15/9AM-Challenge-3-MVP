@@ -29,7 +29,8 @@ struct AllRestaurantsView: View {
     }
 
     private var restaurants: [Restaurant] {
-        var list = RestaurantDirectory.all
+        // Halal preference switches to the bundled MUIS-verified directory.
+        var list = halal ? RestaurantDirectory.verifiedHalal : RestaurantDirectory.all
 
         if !region.isAnywhere {
             list = list.filter { $0.region == region }
@@ -45,6 +46,8 @@ struct AllRestaurantsView: View {
                 restaurant.name.localizedCaseInsensitiveContains(query)
                     || restaurant.cuisine.localizedCaseInsensitiveContains(query)
                     || restaurant.area.localizedCaseInsensitiveContains(query)
+                    || restaurant.address.localizedCaseInsensitiveContains(query)
+                    || restaurant.postcode.contains(query)
             }
         }
 
@@ -69,7 +72,7 @@ struct AllRestaurantsView: View {
             VStack(spacing: 12) {
                 HStack(spacing: 8) {
                     Image(systemName: "magnifyingglass")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppColor.secondaryText)
 
                     TextField("Search name, cuisine or area", text: $searchText)
                         .textFieldStyle(.plain)
@@ -81,7 +84,7 @@ struct AllRestaurantsView: View {
                             searchText = ""
                         } label: {
                             Image(systemName: "xmark.circle.fill")
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(AppColor.secondaryText)
                         }
                         .buttonStyle(.plain)
                         .accessibilityLabel("Clear search")
@@ -89,7 +92,7 @@ struct AllRestaurantsView: View {
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
-                .background(.white)
+                .background(AppColor.card)
                 .clipShape(RoundedRectangle(cornerRadius: 14))
                 .overlay(
                     RoundedRectangle(cornerRadius: 14)
@@ -105,9 +108,16 @@ struct AllRestaurantsView: View {
                         .padding(.horizontal, 4)
                 }
 
+                if halal {
+                    Text("Halal spots from the restaurant directory")
+                        .font(.dynaPuff(12))
+                        .foregroundStyle(AppColor.secondaryText)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+
                 Text("\(restaurants.count) \(restaurants.count == 1 ? "restaurant" : "restaurants")")
                     .font(.dynaPuff(13))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(AppColor.secondaryText)
                     .frame(maxWidth: .infinity, alignment: .leading)
 
                 if restaurants.isEmpty {
@@ -139,7 +149,7 @@ struct AllRestaurantsView: View {
                 }
             }
             .padding()
-            .background(Color(red: 1.0, green: 0.97, blue: 0.93))
+            .background(AppColor.background)
             .navigationTitle("Explore")
         }
     }

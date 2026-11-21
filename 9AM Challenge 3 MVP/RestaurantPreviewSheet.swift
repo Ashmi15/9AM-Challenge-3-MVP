@@ -37,7 +37,7 @@ struct RestaurantPreviewSheet: View {
 
                     Text(restaurant.description)
                         .font(.dynaPuff(15))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(AppColor.secondaryText)
 
                     Label(restaurant.area, systemImage: "mappin.circle")
                         .font(.dynaPuff(13))
@@ -89,7 +89,7 @@ struct RestaurantPreviewSheet: View {
             }
         }
         .padding(20)
-        .background(Color(red: 1.0, green: 0.97, blue: 0.93))
+        .background(AppColor.background)
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
         .fullScreenCover(isPresented: $showFullDetails) {
